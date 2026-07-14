@@ -204,6 +204,19 @@ spec:
       labels:
         app: immich-server
     spec:
+      initContainers:
+        - name: ensure-encoded-video-marker
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              mkdir -p /data/encoded-video
+              touch /data/encoded-video/.immich
+          volumeMounts:
+            - name: library
+              mountPath: /data
       containers:
         - name: immich-server
           image: ghcr.io/immich-app/immich-server:release
