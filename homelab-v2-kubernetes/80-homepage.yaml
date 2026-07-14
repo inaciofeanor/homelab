@@ -1,0 +1,196 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: homepage
+  namespace: homelab
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: homepage
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces", "pods", "nodes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["extensions", "networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list"]
+  - apiGroups: ["traefik.io", "traefik.containo.us"]
+    resources: ["ingressroutes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["nodes", "pods"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["httproutes"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: homepage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: homepage
+subjects:
+  - kind: ServiceAccount
+    name: homepage
+    namespace: homelab
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+  namespace: homelab
+data:
+  kubernetes.yaml: |
+    mode: cluster
+  settings.yaml: |
+    title: Meu Homelab
+    theme: dark
+    color: slate
+    headerStyle: clean
+    layout:
+      Infraestrutura:
+        style: row
+        columns: 4
+      Mídia:
+        style: row
+        columns: 4
+      Monitoramento:
+        style: row
+        columns: 3
+  widgets.yaml: |
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "cluster"
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+    - search:
+        provider: duckduckgo
+        target: _blank
+  # Vazios de propósito: todos os serviços são descobertos automaticamente
+  # via anotações gethomepage.dev/* nos Ingress (veja os outros manifests).
+  services.yaml: "[]"
+  bookmarks.yaml: "[]"
+  docker.yaml: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage
+  template:
+    metadata:
+      labels:
+        app: homepage
+    spec:
+      serviceAccountName: homepage
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: homepage
+          image: ghcr.io/gethomepage/homepage:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: "home.feanor.com.br"
+          ports:
+            - name: http
+              containerPort: 3000
+          resources:
+            requests:
+              cpu: 50m          # era 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m         # novo
+              memory: 256Mi
+          securityContext:
+            # Só lê a API do cluster e arquivos de config montados via
+            # ConfigMap (somente leitura) — não persiste nada em disco,
+            # então este é o serviço mais seguro de travar por completo.
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - mountPath: /app/config/kubernetes.yaml
+              name: homepage-config
+              subPath: kubernetes.yaml
+            - mountPath: /app/config/settings.yaml
+              name: homepage-config
+              subPath: settings.yaml
+            - mountPath: /app/config/widgets.yaml
+              name: homepage-config
+              subPath: widgets.yaml
+            - mountPath: /app/config/services.yaml
+              name: homepage-config
+              subPath: services.yaml
+            - mountPath: /app/config/bookmarks.yaml
+              name: homepage-config
+              subPath: bookmarks.yaml
+            - mountPath: /app/config/docker.yaml
+              name: homepage-config
+              subPath: docker.yaml
+      volumes:
+        - name: homepage-config
+          configMap:
+            name: homepage-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homepage
+  namespace: homelab
+spec:
+  selector:
+    app: homepage
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepage
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Homepage"
+    gethomepage.dev/description: "Painel principal"
+    gethomepage.dev/group: "Infraestrutura"
+    gethomepage.dev/icon: "homepage.png"
+    gethomepage.dev/pod-selector: "app=homepage"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - home.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: home.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage
+                port:
+                  number: 3000

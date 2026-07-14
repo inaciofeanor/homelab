@@ -1,0 +1,94 @@
+# Portainer precisa de permissões amplas para gerenciar o cluster (cluster-admin).
+# É um trade-off comum em home lab — em ambiente corporativo, restrinja o escopo.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: portainer-sa
+  namespace: portainer
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: portainer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: portainer-sa
+    namespace: portainer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: portainer-data
+  namespace: portainer
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portainer
+  namespace: portainer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portainer
+  template:
+    metadata:
+      labels:
+        app: portainer
+    spec:
+      serviceAccountName: portainer-sa
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: portainer
+          image: portainer/portainer-ce:latest
+          imagePullPolicy: IfNotPresent
+          args: ["--bind", ":9000"]
+          ports:
+            - containerPort: 9000
+          resources:
+            requests:
+              cpu: 50m          # era 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m         # novo
+              memory: 256Mi
+          securityContext:
+            # A imagem oficial roda como root por padrão (não declara um
+            # usuário non-root e precisa escrever em /data) — por isso NÃO
+            # forçamos runAsNonRoot aqui. O restante do hardening básico
+            # (sem escalonamento de privilégio, sem capabilities extras)
+            # continua valendo e não quebra nada.
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: portainer-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portainer
+  namespace: portainer
+spec:
+  selector:
+    app: portainer
+  ports:
+    - port: 9000
+      targetPort: 9000

@@ -1,0 +1,226 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-db-data
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-resources
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      # Capas, screenshots e metadados baixados do IGDB/ScreenScraper
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-config
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-assets
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      # Save states, saves e outros uploads feitos pelo navegador
+      storage: 2Gi
+
+# ──────────────────────────────────────────────
+# MariaDB
+# ──────────────────────────────────────────────
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: romm-db
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: romm-db
+  template:
+    metadata:
+      labels:
+        app: romm-db
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MARIADB_DATABASE
+              value: romm
+            - name: MARIADB_USER
+              value: romm
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secrets
+                  key: DB_PASSWD
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secrets
+                  key: MARIADB_ROOT_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: romm-db-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: romm-db
+  namespace: homelab
+spec:
+  selector:
+    app: romm-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+
+# ──────────────────────────────────────────────
+# RomM
+# ──────────────────────────────────────────────
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: romm
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: romm
+  template:
+    metadata:
+      labels:
+        app: romm
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: romm
+          image: rommapp/romm:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              value: romm-db
+            - name: DB_NAME
+              value: romm
+            - name: DB_USER
+              value: romm
+            - name: DB_PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secrets
+                  key: DB_PASSWD
+            - name: ROMM_AUTH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: romm-secrets
+                  key: ROMM_AUTH_SECRET_KEY
+            - name: TZ
+              value: "America/Sao_Paulo"
+            # Opcionais (deixe em branco se não quiser metadados automáticos):
+            # - name: IGDB_CLIENT_ID
+            #   value: ""
+            # - name: IGDB_CLIENT_SECRET
+            #   value: ""
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: library
+              mountPath: /romm/library
+            - name: resources
+              mountPath: /romm/resources
+            - name: config
+              mountPath: /romm/config
+            - name: assets
+              mountPath: /romm/assets
+      volumes:
+        - name: library
+          hostPath:
+            # AJUSTE para o caminho real da sua pasta de ROMs no notebook.
+            # Estrutura esperada: <esse-caminho>/roms/<plataforma>/jogo.ext
+            # Veja: https://docs.romm.app/latest/Getting-Started/Folder-Structure/
+            path: /home/feanor/dados-homelab/roms
+            type: DirectoryOrCreate
+        - name: resources
+          persistentVolumeClaim:
+            claimName: romm-resources
+        - name: config
+          persistentVolumeClaim:
+            claimName: romm-config
+        - name: assets
+          persistentVolumeClaim:
+            claimName: romm-assets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: romm
+  namespace: homelab
+spec:
+  selector:
+    app: romm
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: romm
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "RomM"
+    gethomepage.dev/description: "Jogos retro no navegador"
+    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/icon: "romm.png"
+    gethomepage.dev/pod-selector: "app=romm"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - jogos.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: jogos.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: romm
+                port:
+                  number: 8080

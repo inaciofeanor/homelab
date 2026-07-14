@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-config
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      # Guarda metadados, capas, thumbnails — cresce mais que o do Kavita
+      # conforme o tamanho da biblioteca de filmes/séries.
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: jellyfin
+          image: jellyfin/jellyfin:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TZ
+              value: "America/Sao_Paulo"
+          ports:
+            - containerPort: 8096
+          resources:
+            requests:
+              cpu: 200m        # era 500m — ocioso não precisa disso
+              memory: 768Mi     # era 1Gi
+            limits:
+              cpu: "2"          # mantém — precisa pra transcode
+              memory: 3Gi
+          securityContext:
+            # A imagem oficial roda como root por padrão (não há suporte
+            # nativo a PUID/PGID como em imagens linuxserver.io), e precisa
+            # escrever em /config, /cache e potencialmente transcodificar
+            # com acesso a /dev/dri se você passar GPU — por isso não
+            # forçamos runAsNonRoot aqui.
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: cache
+              mountPath: /cache
+            - name: media
+              mountPath: /media
+              readOnly: true
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: jellyfin-config
+        - name: cache
+          # Cache de transcodificação — temporário, não precisa persistir nem backup
+          emptyDir: {}
+        - name: media
+          hostPath:
+            # AJUSTE para o caminho real da sua pasta de filmes/séries no notebook
+            path: /mnt/dados-homelab-novo/media
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin
+  namespace: homelab
+spec:
+  selector:
+    app: jellyfin
+  ports:
+    - port: 8096
+      targetPort: 8096
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jellyfin
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Jellyfin"
+    gethomepage.dev/description: "Filmes e séries"
+    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/icon: "jellyfin.png"
+    gethomepage.dev/pod-selector: "app=jellyfin"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - filmes.feanor.com.br
+      secretName: feanor-wildcard-tls  
+  rules:
+    - host: filmes.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jellyfin
+                port:
+                  number: 8096

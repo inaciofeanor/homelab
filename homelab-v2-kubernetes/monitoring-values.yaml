@@ -1,0 +1,139 @@
+# ──────────────────────────────────────────────
+# values.yaml para o Helm chart kube-prometheus-stack
+# Ajustado para k3s (single-node) + Traefik (Ingress já embutido no k3s)
+# ──────────────────────────────────────────────
+
+# O k3s roda o control plane (scheduler, controller-manager, proxy) dentro
+# de um único processo, sem expor as métricas da forma padrão que o chart
+# espera. Sem isso desabilitado, esses 3 itens ficam eternamente "down".
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeEtcd:
+  enabled: false
+
+# ──────────────────────────────────────────────
+# Prometheus
+# ──────────────────────────────────────────────
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              # Ajuste conforme o espaço livre no disco do notebook.
+              # 15 dias de retenção num homelab pequeno cabe tranquilo em 10Gi.
+              storage: 10Gi
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - prometheus.feanor.com.br
+    paths:
+      - /
+    annotations:
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Prometheus"
+      gethomepage.dev/description: "Métricas do cluster"
+      gethomepage.dev/group: "Monitoramento"
+      gethomepage.dev/icon: "prometheus.png"
+      # Confirme o label real com: kubectl get pods -n monitoring --show-labels
+      gethomepage.dev/pod-selector: "app.kubernetes.io/name=prometheus"
+    tls:
+      - hosts:
+          - prometheus.feanor.com.br
+        secretName: feanor-wildcard-tls
+
+# ──────────────────────────────────────────────
+# Alertmanager
+# ──────────────────────────────────────────────
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - alertmanager.feanor.com.br
+    paths:
+      - /
+    annotations:
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Alertmanager"
+      gethomepage.dev/description: "Alertas do cluster"
+      gethomepage.dev/group: "Monitoramento"
+      gethomepage.dev/icon: "alertmanager.png"
+      gethomepage.dev/pod-selector: "app.kubernetes.io/name=alertmanager"
+    tls:
+      - hosts:
+          - alertmanager.feanor.com.br
+        secretName: feanor-wildcard-tls
+
+# ──────────────────────────────────────────────
+# Grafana
+# ──────────────────────────────────────────────
+grafana:
+  # TROQUE antes de instalar
+  adminPassword: "changeme_grafana_super_secreta"
+  defaultDashboardsTimezone: America/Sao_Paulo
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    size: 2Gi
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - grafana.feanor.com.br
+    path: /
+    annotations:
+      gethomepage.dev/enabled: "true"
+      gethomepage.dev/name: "Grafana"
+      gethomepage.dev/description: "Dashboards"
+      gethomepage.dev/group: "Monitoramento"
+      gethomepage.dev/icon: "grafana.png"
+      gethomepage.dev/pod-selector: "app.kubernetes.io/name=grafana"
+    tls:
+      - hosts:
+          - grafana.feanor.com.br
+        secretName: feanor-wildcard-tls
+
+# node-exporter (métricas de CPU/RAM/disco do notebook) e kube-state-metrics
+# (métricas dos objetos do Kubernetes: pods, deployments, etc) ficam com os
+# valores padrão do chart — não precisam de ajuste especial no k3s.
+#
+# Sobre securityContext: o chart kube-prometheus-stack já aplica um
+# securityContext restritivo por padrão (runAsNonRoot, sem privilégios
+# extras) em todos os componentes — não é necessário sobrescrever aqui.

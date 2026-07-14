@@ -1,0 +1,6 @@
+# Os valores em 02-sealed-secrets.yaml são ciphertext assimétrico gerado pelo
+# controller Sealed Secrets. Esse arquivo não pode conter stringData/plaintext.
+[allowlist]
+paths = [
+  '''homelab-v2-kubernetes/02-sealed-secrets.yaml''',
+]

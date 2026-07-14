@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - 00-namespace.yaml
+  - 02-sealed-secrets.yaml
+  - 05-certificates.yaml
+  - 10-portainer.yaml
+  - 20-nextcloud.yaml
+  - 30-gitea.yaml
+  - 40-navidrome.yaml
+  - 50-ingress.yaml
+  - 60-kavita.yaml
+  - 70-jellyfin.yaml
+  - 80-homepage.yaml
+  - 90-immich.yaml
+  - 95-romm.yaml

@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: navidrome-data
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: navidrome
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: navidrome
+  template:
+    metadata:
+      labels:
+        app: navidrome
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: navidrome
+          image: deluan/navidrome:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ND_SCANSCHEDULE
+              value: "1h"
+            - name: ND_LOGLEVEL
+              value: info
+            - name: ND_SESSIONTIMEOUT
+              value: "24h"
+          ports:
+            - containerPort: 4533
+          resources:
+            requests:
+              cpu: 100m        # era 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m         # novo
+              memory: 512Mi
+          securityContext:
+            # Não fixamos runAsNonRoot/runAsUser porque não há garantia de
+            # que a permissão do hostPath de música (abaixo) já esteja
+            # compatível com um UID específico. Se quiser reforçar, defina
+            # runAsUser/runAsGroup com o UID dono da pasta de música no
+            # notebook e teste — sem isso o Navidrome pode falhar ao ler
+            # a pasta ou escrever em /data.
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: music
+              mountPath: /music
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: navidrome-data
+        - name: music
+          hostPath:
+            # AJUSTE para o caminho real da sua pasta de música no notebook
+            path: /mnt/dados-homelab-novo/music
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: navidrome
+  namespace: homelab
+spec:
+  selector:
+    app: navidrome
+  ports:
+    - port: 4533
+      targetPort: 4533

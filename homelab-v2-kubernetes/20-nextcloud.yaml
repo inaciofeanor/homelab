@@ -1,0 +1,228 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-db-data
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-db
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud-db
+  template:
+    metadata:
+      labels:
+        app: nextcloud-db
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mariadb
+          image: mariadb:11
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--transaction-isolation=READ-COMMITTED"
+            - "--binlog-format=ROW"
+          envFrom:
+            - secretRef:
+                name: nextcloud-db-secrets
+          env:
+            - name: MYSQL_DATABASE
+              value: nextcloud
+            - name: MYSQL_USER
+              value: nextcloud
+          resources:
+            requests:
+              cpu: 150m        # era 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m         # novo
+              memory: 512Mi
+          securityContext:
+            # O entrypoint oficial do mariadb precisa iniciar como root para
+            # ajustar a permissÃ£o de /var/lib/mysql no primeiro start, e sÃ³
+            # depois troca para o usuÃ¡rio "mysql" internamente (via gosu,
+            # que precisa de SETUID/SETGID). Por isso nÃ£o forÃ§amos
+            # runAsNonRoot nem restringimos capabilities aqui â€” sÃ³
+            # allowPrivilegeEscalation: false, que nÃ£o interfere no boot.
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: nextcloud-db-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-db
+  namespace: homelab
+spec:
+  selector:
+    app: nextcloud-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-redis
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud-redis
+  template:
+    metadata:
+      labels:
+        app: nextcloud-redis
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: redis
+          image: redis:alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: 20m          # era 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m         # novo
+              memory: 128Mi
+          securityContext:
+            # Mesmo caso do mariadb: o entrypoint oficial troca para o
+            # usuÃ¡rio "redis" sozinho (via gosu) quando inicia como root,
+            # o que precisa das capabilities padrÃ£o.
+            allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-redis
+  namespace: homelab
+spec:
+  selector:
+    app: nextcloud-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: configure-trusted-domain
+          image: nextcloud:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              if [ -f /var/www/html/config/config.php ]; then
+                su -s /bin/sh www-data -c 'php /var/www/html/occ config:system:set trusted_domains 0 --value=nextcloud.feanor.com.br'
+              fi
+          volumeMounts:
+            - name: data
+              mountPath: /var/www/html
+      containers:
+        - name: nextcloud
+          image: nextcloud:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: nextcloud-db-secrets
+            - secretRef:
+                name: nextcloud-app-secrets
+          env:
+            - name: MYSQL_HOST
+              value: nextcloud-db
+            - name: MYSQL_DATABASE
+              value: nextcloud
+            - name: MYSQL_USER
+              value: nextcloud
+            - name: REDIS_HOST
+              value: nextcloud-redis
+            - name: NEXTCLOUD_TRUSTED_DOMAINS
+              value: nextcloud.feanor.com.br
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 200m        # era 500m
+              memory: 512Mi
+            limits:
+              cpu: 750m         # novo
+              memory: 1Gi
+          securityContext:
+            # A imagem Apache do Nextcloud tambÃ©m precisa de root no boot
+            # (o entrypoint ajusta a ownership de /var/www/html), e o
+            # Apache derruba privilÃ©gio para "www-data" nos processos
+            # worker (setuid/setgid) â€” comportamento padrÃ£o da imagem
+            # oficial. Deixamos as capabilities padrÃ£o intactas.
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: data
+              mountPath: /var/www/html
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: nextcloud-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud
+  namespace: homelab
+spec:
+  selector:
+    app: nextcloud
+  ports:
+    - port: 80
+      targetPort: 80

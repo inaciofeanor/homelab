@@ -1,0 +1,288 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-db-data
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-ml-cache
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      # Guarda os modelos de ML baixados (CLIP, reconhecimento facial, etc)
+      storage: 5Gi
+
+# ──────────────────────────────────────────────
+# Postgres com extensão de busca vetorial (necessário para o Immich,
+# não é um Postgres genérico — usa a imagem oficial do projeto)
+# ──────────────────────────────────────────────
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-postgres
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-postgres
+  template:
+    metadata:
+      labels:
+        app: immich-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              value: immich
+            - name: POSTGRES_DB
+              value: immich
+            - name: POSTGRES_INITDB_ARGS
+              value: "--data-checksums"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-db-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: immich-db-data
+        - name: dshm
+          # Equivalente ao "shm_size: 128mb" do docker-compose oficial,
+          # necessário para consultas mais pesadas do Postgres
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-postgres
+  namespace: homelab
+spec:
+  selector:
+    app: immich-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+# ──────────────────────────────────────────────
+# Valkey (fork do Redis, é o que o Immich usa atualmente)
+# ──────────────────────────────────────────────
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-redis
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-redis
+  template:
+    metadata:
+      labels:
+        app: immich-redis
+    spec:
+      containers:
+        - name: valkey
+          image: docker.io/valkey/valkey:9
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-redis
+  namespace: homelab
+spec:
+  selector:
+    app: immich-redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+
+# ──────────────────────────────────────────────
+# Machine Learning — reconhecimento facial e busca inteligente.
+# É a parte mais pesada de CPU/RAM da stack.
+# ──────────────────────────────────────────────
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-machine-learning
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-machine-learning
+  template:
+    metadata:
+      labels:
+        app: immich-machine-learning
+    spec:
+      containers:
+        - name: machine-learning
+          image: ghcr.io/immich-app/immich-machine-learning:release
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3003
+          resources:
+            requests:
+              cpu: 1
+              memory: 1Gi
+            limits:
+              memory: 3Gi
+          volumeMounts:
+            - name: cache
+              mountPath: /cache
+      volumes:
+        - name: cache
+          persistentVolumeClaim:
+            claimName: immich-ml-cache
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-machine-learning
+  namespace: homelab
+spec:
+  selector:
+    app: immich-machine-learning
+  ports:
+    - port: 3003
+      targetPort: 3003
+
+# ──────────────────────────────────────────────
+# Immich Server — API + interface web
+# ──────────────────────────────────────────────
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-server
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-server
+  template:
+    metadata:
+      labels:
+        app: immich-server
+    spec:
+      containers:
+        - name: immich-server
+          image: ghcr.io/immich-app/immich-server:release
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOSTNAME
+              value: immich-postgres
+            - name: DB_USERNAME
+              value: immich
+            - name: DB_DATABASE_NAME
+              value: immich
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-db-secrets
+                  key: DB_PASSWORD
+            - name: REDIS_HOSTNAME
+              value: immich-redis
+            - name: MACHINE_LEARNING_URL
+              value: "http://immich-machine-learning:3003"
+            - name: TZ
+              value: "America/Sao_Paulo"
+          ports:
+            - containerPort: 2283
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          volumeMounts:
+            - name: library
+              mountPath: /data
+      volumes:
+        - name: library
+          hostPath:
+            # AJUSTE para o caminho real onde quer guardar fotos/vídeos no notebook
+            # (precisa de leitura E escrita — o Immich grava thumbnails aqui)
+            path: /home/feanor/dados-homelab/photos
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-server
+  namespace: homelab
+spec:
+  selector:
+    app: immich-server
+  ports:
+    - port: 2283
+      targetPort: 2283
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Immich"
+    gethomepage.dev/description: "Fotos e vídeos"
+    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/icon: "immich.png"
+    gethomepage.dev/pod-selector: "app=immich-server"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - fotos.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: fotos.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: immich-server
+                port:
+                  number: 2283

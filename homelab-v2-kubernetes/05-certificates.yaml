@@ -1,0 +1,93 @@
+# ──────────────────────────────────────────────
+# Pré-requisitos (veja CERTIFICADOS.md para o passo a passo completo):
+# 1. cert-manager instalado no cluster
+# 2. DNS do feanor.com.br migrado para o Cloudflare
+# 3. Secret "cloudflare-api-token-secret" criado no namespace cert-manager
+# 4. Troque o e-mail abaixo pelo seu e-mail real
+# ──────────────────────────────────────────────
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: inacio.brunosilva@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: inacio.brunosilva@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
+
+# ──────────────────────────────────────────────
+# Um certificado wildcard cobre TODOS os subdomínios de uma vez
+# (nextcloud., git., musica., fotos., etc — todos em "*.feanor.com.br").
+# Precisa de uma cópia em cada namespace que tem um Ingress, porque
+# um Secret de TLS só pode ser usado por um Ingress no MESMO namespace.
+# ──────────────────────────────────────────────
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: feanor-wildcard
+  namespace: homelab
+spec:
+  secretName: feanor-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.feanor.com.br"
+  dnsNames:
+    - "*.feanor.com.br"
+    - "feanor.com.br"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: feanor-wildcard
+  namespace: portainer
+spec:
+  secretName: feanor-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.feanor.com.br"
+  dnsNames:
+    - "*.feanor.com.br"
+    - "feanor.com.br"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: feanor-wildcard
+  namespace: monitoring
+spec:
+  secretName: feanor-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.feanor.com.br"
+  dnsNames:
+    - "*.feanor.com.br"
+    - "feanor.com.br"
+

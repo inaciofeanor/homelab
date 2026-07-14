@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kavita-config
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kavita
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kavita
+  template:
+    metadata:
+      labels:
+        app: kavita
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: kavita
+          image: ghcr.io/kareadita/kavita:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TZ
+              value: "America/Sao_Paulo"
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              cpu: 100m        # era 250m
+              memory: 256Mi     # era 512Mi
+            limits:
+              cpu: 500m         # novo
+              memory: 1Gi
+          securityContext:
+            # Mesma ressalva do Navidrome: não fixamos runAsUser porque
+            # depende da ownership da pasta de ebooks no hostPath abaixo.
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /kavita/config
+            - name: books
+              mountPath: /books
+              readOnly: true
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: kavita-config
+        - name: books
+          hostPath:
+            # AJUSTE para o caminho real da sua pasta de ebooks no notebook
+            path: /mnt/dados-homelab-novo/ebooks
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kavita
+  namespace: homelab
+spec:
+  selector:
+    app: kavita
+  ports:
+    - port: 5000
+      targetPort: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kavita
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Kavita"
+    gethomepage.dev/description: "Ebooks"
+    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/icon: "kavita.png"
+    gethomepage.dev/pod-selector: "app=kavita"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - ebooks.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: ebooks.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kavita
+                port:
+                  number: 5000

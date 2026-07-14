@@ -1,0 +1,121 @@
+# Todos os hosts abaixo precisam estar no /etc/hosts (ou DNS local)
+# de cada dispositivo cliente, apontando para o IP do notebook.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Nextcloud"
+    gethomepage.dev/description: "Armazenamento em nuvem"
+    gethomepage.dev/group: "Infraestrutura"
+    gethomepage.dev/icon: "nextcloud.png"
+    gethomepage.dev/pod-selector: "app=nextcloud"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - nextcloud.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: nextcloud.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nextcloud
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gitea
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Gitea"
+    gethomepage.dev/description: "Servidor Git"
+    gethomepage.dev/group: "Infraestrutura"
+    gethomepage.dev/icon: "gitea.png"
+    gethomepage.dev/pod-selector: "app=gitea"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - git.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: git.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gitea-http
+                port:
+                  number: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: navidrome
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Navidrome"
+    gethomepage.dev/description: "Servidor de música"
+    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/icon: "navidrome.png"
+    gethomepage.dev/pod-selector: "app=navidrome"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - musica.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: musica.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: navidrome
+                port:
+                  number: 4533
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portainer
+  namespace: portainer
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Portainer"
+    gethomepage.dev/description: "Gerenciamento do cluster"
+    gethomepage.dev/group: "Infraestrutura"
+    gethomepage.dev/icon: "portainer.png"
+    gethomepage.dev/pod-selector: "app=portainer"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - portainer.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: portainer.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portainer
+                port:
+                  number: 9000

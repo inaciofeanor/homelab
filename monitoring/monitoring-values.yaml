@@ -1,0 +1,89 @@
+# ──────────────────────────────────────────────
+# values.yaml para o Helm chart kube-prometheus-stack
+# Ajustado para k3s (single-node) + Traefik (Ingress já embutido no k3s)
+# ──────────────────────────────────────────────
+
+# O k3s roda o control plane (scheduler, controller-manager, proxy) dentro
+# de um único processo, sem expor as métricas da forma padrão que o chart
+# espera. Sem isso desabilitado, esses 3 itens ficam eternamente "down".
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeEtcd:
+  enabled: false
+
+# ──────────────────────────────────────────────
+# Prometheus
+# ──────────────────────────────────────────────
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              # Ajuste conforme o espaço livre no disco do notebook.
+              # 15 dias de retenção num homelab pequeno cabe tranquilo em 10Gi.
+              storage: 10Gi
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - prometheus.feanor.com.br
+    paths:
+      - /
+
+# ──────────────────────────────────────────────
+# Alertmanager
+# ──────────────────────────────────────────────
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - alertmanager.feanor.com.br
+    paths:
+      - /
+
+# ──────────────────────────────────────────────
+# Grafana
+# ──────────────────────────────────────────────
+grafana:
+  # TROQUE antes de instalar
+  adminPassword: "P9vdzVzoz7cwoO"
+  defaultDashboardsTimezone: America/Sao_Paulo
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    size: 2Gi
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - grafana.feanor.com.br
+    path: /
+
+# node-exporter (métricas de CPU/RAM/disco do notebook) e kube-state-metrics
+# (métricas dos objetos do Kubernetes: pods, deployments, etc) ficam com os
+# valores padrão do chart — não precisam de ajuste especial no k3s.
