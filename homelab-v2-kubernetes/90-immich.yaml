@@ -155,7 +155,7 @@ spec:
     spec:
       containers:
         - name: machine-learning
-          image: ghcr.io/immich-app/immich-machine-learning:release
+          image: ghcr.io/immich-app/immich-machine-learning:v3.0.3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3003
@@ -219,7 +219,7 @@ spec:
               mountPath: /data
       containers:
         - name: immich-server
-          image: ghcr.io/immich-app/immich-server:release
+          image: ghcr.io/immich-app/immich-server:v3.0.3
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_HOSTNAME
