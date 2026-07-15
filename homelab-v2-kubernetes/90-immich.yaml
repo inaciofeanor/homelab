@@ -205,15 +205,15 @@ spec:
         app: immich-server
     spec:
       initContainers:
-        - name: ensure-encoded-video-marker
+        - name: ensure-storage-markers
           image: busybox:1.36
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
             - -ec
             - |
-              mkdir -p /data/encoded-video
-              touch /data/encoded-video/.immich
+              mkdir -p /data/upload /data/backups /data/library /data/profile /data/thumbs /data/encoded-video
+              touch /data/upload/.immich /data/backups/.immich /data/library/.immich /data/profile/.immich /data/thumbs/.immich /data/encoded-video/.immich
           volumeMounts:
             - name: library
               mountPath: /data
