@@ -255,7 +255,7 @@ spec:
           hostPath:
             # AJUSTE para o caminho real onde quer guardar fotos/vídeos no notebook
             # (precisa de leitura E escrita — o Immich grava thumbnails aqui)
-            path: /home/feanor/dados-homelab/photos
+            path: /mnt/dados-homelab-novo/photos
             type: DirectoryOrCreate
 ---
 apiVersion: v1
