@@ -1,4 +1,5 @@
 # Home Lab em Kubernetes (k3s) com Traefik
+> Para uma instalação nova ou reconstrução completa, siga o [guia de instalação atualizado](INSTALLATION.md). Este README é mantido como referência resumida da migração inicial.
 
 Migração da stack Docker Compose para Kubernetes, usando **k3s** (distribuição leve de
 Kubernetes, ideal para notebook/single-node) com **Traefik** — que já vem **embutido por

@@ -44,6 +44,7 @@ terraform.rc
 # planout
 # RecuperaÃ§Ã£o local de credenciais; nunca versionar.
 homelab-v2-kubernetes/backup/backup.conf
+homelab-v2-kubernetes/monitoring-values.local.yaml
 homelab-v2-kubernetes/secrets/*.env
 homelab-v2-kubernetes/secrets/*.key
 sealed-secrets-master.key
