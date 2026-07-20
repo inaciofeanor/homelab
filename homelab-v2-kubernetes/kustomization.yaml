@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - 00-namespace.yaml
   - 02-sealed-secrets.yaml
+  - 03-romm-screenscraper-sealed-secret.yaml
   - 05-certificates.yaml
   - 10-portainer.yaml
   - 20-nextcloud.yaml

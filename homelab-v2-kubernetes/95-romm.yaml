@@ -130,6 +130,9 @@ spec:
         - name: romm
           image: rommapp/romm:latest
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: romm-screenscraper-secrets
           env:
             - name: DB_HOST
               value: romm-db
@@ -171,7 +174,7 @@ spec:
             # AJUSTE para o caminho real da sua pasta de ROMs no notebook.
             # Estrutura esperada: <esse-caminho>/roms/<plataforma>/jogo.ext
             # Veja: https://docs.romm.app/latest/Getting-Started/Folder-Structure/
-            path: /home/feanor/dados-homelab/roms
+            path: /mnt/dados-homelab-novo/roms
             type: DirectoryOrCreate
         - name: resources
           persistentVolumeClaim:
