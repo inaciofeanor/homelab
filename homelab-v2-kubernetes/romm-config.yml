@@ -1,0 +1,8 @@
+# Configuração persistente do RomM (/romm/config/config.yml).
+# O ScreenScraper é consultado primeiro para baixar as capas durante as varreduras.
+scan:
+  priority:
+    artwork:
+      - ss
+      - igdb
+      - moby

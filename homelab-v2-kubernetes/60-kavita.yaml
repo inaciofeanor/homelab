@@ -87,7 +87,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Kavita"
     gethomepage.dev/description: "Ebooks"
-    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/group: "Mídia e Jogos"
     gethomepage.dev/icon: "kavita.png"
     gethomepage.dev/pod-selector: "app=kavita"
 spec:

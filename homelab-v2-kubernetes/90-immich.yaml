@@ -279,7 +279,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Immich"
     gethomepage.dev/description: "Fotos e vídeos"
-    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/group: "Mídia e Jogos"
     gethomepage.dev/icon: "immich.png"
     gethomepage.dev/pod-selector: "app=immich-server"
 spec:

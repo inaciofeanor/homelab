@@ -9,7 +9,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Nextcloud"
     gethomepage.dev/description: "Armazenamento em nuvem"
-    gethomepage.dev/group: "Infraestrutura"
+    gethomepage.dev/group: "Principal"
     gethomepage.dev/icon: "nextcloud.png"
     gethomepage.dev/pod-selector: "app=nextcloud"
 spec:
@@ -39,7 +39,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Gitea"
     gethomepage.dev/description: "Servidor Git"
-    gethomepage.dev/group: "Infraestrutura"
+    gethomepage.dev/group: "Administração"
     gethomepage.dev/icon: "gitea.png"
     gethomepage.dev/pod-selector: "app=gitea"
 spec:
@@ -69,7 +69,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Navidrome"
     gethomepage.dev/description: "Servidor de música"
-    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/group: "Mídia e Jogos"
     gethomepage.dev/icon: "navidrome.png"
     gethomepage.dev/pod-selector: "app=navidrome"
 spec:
@@ -99,7 +99,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Portainer"
     gethomepage.dev/description: "Gerenciamento do cluster"
-    gethomepage.dev/group: "Infraestrutura"
+    gethomepage.dev/group: "Administração"
     gethomepage.dev/icon: "portainer.png"
     gethomepage.dev/pod-selector: "app=portainer"
 spec:

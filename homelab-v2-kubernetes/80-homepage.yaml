@@ -51,20 +51,51 @@ data:
     mode: cluster
   settings.yaml: |
     title: Meu Homelab
+    description: Serviços, mídia e administração do ambiente
+    language: pt
     theme: dark
-    color: slate
-    headerStyle: clean
+    color: zinc
+    background:
+      image: /images/dashboard-background.png
+      brightness: 45
+      saturate: 50
+      opacity: 55
+    headerStyle: boxedWidgets
+    iconStyle: theme
+    useEqualHeights: true
     layout:
-      Infraestrutura:
+      Principal:
         style: row
         columns: 4
-      Mídia:
+        icon: mdi-apps
+        tab: Aplicações
+      Mídia e Jogos:
         style: row
         columns: 4
+        icon: mdi-multimedia
+        tab: Aplicações
+      Administração:
+        style: row
+        columns: 4
+        icon: mdi-server-cog
+        tab: Sistema
       Monitoramento:
         style: row
-        columns: 3
+        columns: 4
+        icon: mdi-chart-line
+        tab: Sistema
   widgets.yaml: |
+    - datetime:
+        text_size: xl
+        locale: pt-BR
+        format:
+          dateStyle: medium
+          timeStyle: short
+          hourCycle: h23
+    - resources:
+        label: Armazenamento
+        expanded: true
+        disk: /mnt/dados-homelab-novo
     - kubernetes:
         cluster:
           show: true
@@ -84,6 +115,38 @@ data:
   services.yaml: "[]"
   bookmarks.yaml: "[]"
   docker.yaml: ""
+  custom.css: |
+    html, body {
+      background: #05070a !important;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 50% -20%, rgba(80, 94, 108, 0.45), transparent 48%),
+        radial-gradient(circle at 10% 90%, rgba(36, 51, 64, 0.35), transparent 42%),
+        linear-gradient(145deg, #030405 0%, #11151a 50%, #05070a 100%);
+    }
+    .service, .bookmark, .widget {
+      border-color: rgba(148, 163, 184, 0.16) !important;
+      background-color: rgba(15, 20, 26, 0.72) !important;
+      backdrop-filter: blur(10px);
+    }
+---
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homepage-assets
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -147,10 +210,25 @@ spec:
             - mountPath: /app/config/docker.yaml
               name: homepage-config
               subPath: docker.yaml
+            - mountPath: /app/config/custom.css
+              name: homepage-config
+              subPath: custom.css
+            - mountPath: /app/public/images
+              name: homepage-assets
+            - mountPath: /mnt/dados-homelab-novo
+              name: dados-homelab-novo
+              readOnly: true
       volumes:
         - name: homepage-config
           configMap:
             name: homepage-config
+        - name: dados-homelab-novo
+          hostPath:
+            path: /mnt/dados-homelab-novo
+            type: Directory
+        - name: homepage-assets
+          persistentVolumeClaim:
+            claimName: homepage-assets
 ---
 apiVersion: v1
 kind: Service
@@ -174,7 +252,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Homepage"
     gethomepage.dev/description: "Painel principal"
-    gethomepage.dev/group: "Infraestrutura"
+    gethomepage.dev/group: "Administração"
     gethomepage.dev/icon: "homepage.png"
     gethomepage.dev/pod-selector: "app=homepage"
 spec:
