@@ -13,5 +13,6 @@ resources:
   - 60-kavita.yaml
   - 70-jellyfin.yaml
   - 80-homepage.yaml
+  - 85-pod-cleanup-cronjob.yaml
   - 90-immich.yaml
   - 95-romm.yaml

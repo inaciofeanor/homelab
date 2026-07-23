@@ -62,6 +62,7 @@ data:
       opacity: 55
     headerStyle: boxedWidgets
     iconStyle: theme
+    showStats: true
     useEqualHeights: true
     layout:
       Principal:
@@ -92,21 +93,27 @@ data:
           dateStyle: medium
           timeStyle: short
           hourCycle: h23
+        timeZone: America/Sao_Paulo
     - resources:
+        backend: resources
         label: Armazenamento
         expanded: true
-        disk: /mnt/dados-homelab-novo
+        disk:
+          - /host-root
+          - /mnt/dados-homelab-novo
     - kubernetes:
         cluster:
           show: true
           cpu: true
           memory: true
           showLabel: true
-          label: "cluster"
+          label: "Cluster"
         nodes:
-          show: true
+          show: false
           cpu: true
           memory: true
+          showLabel: true
+          label: "Node"
     - search:
         provider: duckduckgo
         target: _blank
@@ -215,6 +222,9 @@ spec:
               subPath: custom.css
             - mountPath: /app/public/images
               name: homepage-assets
+            - mountPath: /host-root
+              name: host-root
+              readOnly: true
             - mountPath: /mnt/dados-homelab-novo
               name: dados-homelab-novo
               readOnly: true
@@ -222,6 +232,10 @@ spec:
         - name: homepage-config
           configMap:
             name: homepage-config
+        - name: host-root
+          hostPath:
+            path: /
+            type: Directory
         - name: dados-homelab-novo
           hostPath:
             path: /mnt/dados-homelab-novo
