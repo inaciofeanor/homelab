@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: n8n-db-data, namespace: homelab}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests: {storage: 2Gi}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: n8n-data, namespace: homelab}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests: {storage: 2Gi}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: n8n-db, namespace: homelab}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: n8n-db}
+  template:
+    metadata:
+      labels: {app: n8n-db}
+    spec:
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: POSTGRES_DB, value: n8n}
+            - {name: POSTGRES_USER, value: n8n}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: n8n-secrets, key: DB_PASSWORD}
+          ports:
+            - {name: postgres, containerPort: 5432}
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 300m, memory: 384Mi}
+          securityContext: {allowPrivilegeEscalation: false}
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "n8n", "-d", "n8n"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: n8n-db-data}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: n8n-db, namespace: homelab}
+spec:
+  selector: {app: n8n-db}
+  ports:
+    - {name: postgres, port: 5432, targetPort: postgres}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: n8n, namespace: homelab}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: n8n}
+  template:
+    metadata:
+      labels: {app: n8n}
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        - name: wait-for-database
+          image: postgres:17-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-ec", "until pg_isready -h n8n-db -U n8n -d n8n; do sleep 2; done"]
+      containers:
+        - name: n8n
+          image: docker.n8n.io/n8nio/n8n:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: DB_TYPE, value: postgresdb}
+            - {name: DB_POSTGRESDB_HOST, value: n8n-db}
+            - {name: DB_POSTGRESDB_DATABASE, value: n8n}
+            - {name: DB_POSTGRESDB_USER, value: n8n}
+            - name: DB_POSTGRESDB_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: n8n-secrets, key: DB_PASSWORD}
+            - name: N8N_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef: {name: n8n-secrets, key: ENCRYPTION_KEY}
+            - {name: N8N_HOST, value: automacao.feanor.com.br}
+            - {name: N8N_PROTOCOL, value: https}
+            - {name: N8N_PORT, value: "5678"}
+            - {name: N8N_EDITOR_BASE_URL, value: "https://automacao.feanor.com.br/"}
+            - {name: WEBHOOK_URL, value: "https://automacao.feanor.com.br/"}
+            - {name: N8N_PROXY_HOPS, value: "1"}
+            - {name: GENERIC_TIMEZONE, value: America/Sao_Paulo}
+            - {name: TZ, value: America/Sao_Paulo}
+            - {name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS, value: "true"}
+            - {name: EXECUTIONS_DATA_PRUNE, value: "true"}
+            - {name: EXECUTIONS_DATA_MAX_AGE, value: "336"}
+          ports:
+            - {name: http, containerPort: 5678}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: 750m, memory: 768Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          volumeMounts:
+            - {name: data, mountPath: /home/node/.n8n}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: n8n-data}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: n8n, namespace: homelab}
+spec:
+  selector: {app: n8n}
+  ports:
+    - {name: http, port: 5678, targetPort: http}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: n8n
+    gethomepage.dev/description: Automações
+    gethomepage.dev/group: Administração
+    gethomepage.dev/icon: n8n.png
+    gethomepage.dev/pod-selector: app=n8n
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [automacao.feanor.com.br]
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: automacao.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: n8n
+                port: {number: 5678}

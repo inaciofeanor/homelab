@@ -4,7 +4,7 @@ Este guia instala a stack atual deste repositório em um servidor Linux de nó �
 
 ## O que será instalado
 
-No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Homepage, Immich (Postgres, Valkey e machine learning) e RomM (MariaDB). O Portainer é instalado no namespace `portainer`.
+No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning) e RomM (MariaDB). O Portainer é instalado no namespace `portainer`.
 
 Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitoramento (Prometheus, Grafana e Alertmanager) e Argo CD.
 
@@ -45,6 +45,7 @@ sudo mkdir -p /mnt/dados-homelab-novo/{ebooks,media,music,photos,roms}
 | Navidrome | `40-navidrome.yaml` | `/mnt/dados-homelab-novo/music` |
 | Kavita | `60-kavita.yaml` | `/mnt/dados-homelab-novo/ebooks` |
 | Jellyfin | `70-jellyfin.yaml` | `/mnt/dados-homelab-novo/media` |
+| Radarr e Bazarr | `75-radarr-bazarr.yaml` | `/mnt/dados-homelab-novo/media` |
 | Immich | `90-immich.yaml` | `/mnt/dados-homelab-novo/photos` |
 | RomM | `95-romm.yaml` | caminho configurado no `hostPath` do manifesto |
 
@@ -158,6 +159,7 @@ Se ainda não houver DNS interno ou público, adicione temporariamente no client
 ```text
 IP_DO_SERVIDOR nextcloud.feanor.com.br git.feanor.com.br musica.feanor.com.br
 IP_DO_SERVIDOR portainer.feanor.com.br ebooks.feanor.com.br filmes.feanor.com.br
+IP_DO_SERVIDOR radarr.feanor.com.br legendas.feanor.com.br
 IP_DO_SERVIDOR fotos.feanor.com.br jogos.feanor.com.br home.feanor.com.br
 IP_DO_SERVIDOR grafana.feanor.com.br prometheus.feanor.com.br alertmanager.feanor.com.br
 IP_DO_SERVIDOR argocd.feanor.com.br
@@ -197,6 +199,8 @@ kubectl logs -n homelab deploy/immich-server --tail=100
 | Portainer | `https://portainer.feanor.com.br` |
 | Kavita | `https://ebooks.feanor.com.br` |
 | Jellyfin | `https://filmes.feanor.com.br` |
+| Radarr | `https://radarr.feanor.com.br` |
+| Bazarr | `https://legendas.feanor.com.br` |
 | Immich | `https://fotos.feanor.com.br` |
 | RomM | `https://jogos.feanor.com.br` |
 
@@ -205,6 +209,8 @@ O SSH do Gitea usa NodePort:
 ```bash
 git clone ssh://git@IP_DO_SERVIDOR:30022/USUARIO/REPOSITORIO.git
 ```
+
+A configuração inicial e as regras de segurança estão documentadas em [Radarr e Bazarr](RADARR-BAZARR.md).
 
 ## 8. Monitoramento (opcional)
 
