@@ -64,7 +64,7 @@ backup frio para PVCs e metadados.
 3. Extraia `repository/homelab.tar.gz` do backup ou clone este repositório.
 4. Revise IPs, DNS, certificados, secrets e caminhos nos manifests.
 5. Se quiser restaurar os volumes de monitoramento, instale o chart antes de rodar
-   o restore, conforme `MONITORING.md`, para que os três PVCs já existam.
+   o restore, conforme a seção de monitoramento de `INSTALLATION.md`, para que os três PVCs já existam.
 6. Execute inicialmente sem `--force`:
 
 ```bash

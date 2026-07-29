@@ -4,7 +4,7 @@ Este guia instala a stack atual deste repositório em um servidor Linux de nó �
 
 ## O que será instalado
 
-No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning) e RomM (MariaDB). O Portainer é instalado no namespace `portainer`.
+No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL) e Actual Budget. O Portainer é instalado no namespace `portainer`.
 
 Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitoramento (Prometheus, Grafana e Alertmanager) e Argo CD.
 
@@ -114,7 +114,7 @@ helm upgrade --install sealed-secrets sealed-secrets/sealed-secrets \
   --namespace kube-system
 ```
 
-Instale `kubeseal`, crie os quatro `Secret` com senhas novas e sele cada um para substituir o conteúdo de `02-sealed-secrets.yaml`. As chaves obrigatórias são:
+Instale `kubeseal`, crie os `Secret` necessários com valores novos e sele cada recurso para substituir o manifesto correspondente. As chaves obrigatórias são:
 
 | Secret | Chaves |
 | --- | --- |
@@ -122,6 +122,9 @@ Instale `kubeseal`, crie os quatro `Secret` com senhas novas e sele cada um para
 | `nextcloud-app-secrets` | `NEXTCLOUD_ADMIN_USER`, `NEXTCLOUD_ADMIN_PASSWORD` |
 | `immich-db-secrets` | `DB_PASSWORD` |
 | `romm-secrets` | `DB_PASSWD`, `MARIADB_ROOT_PASSWORD`, `ROMM_AUTH_SECRET_KEY` |
+| `romm-screenscraper-secrets` | `SCREENSCRAPER_USER`, `SCREENSCRAPER_PASSWORD` (opcional) |
+| `vikunja-secrets` | `DB_PASSWORD` |
+| `n8n-secrets` | `DB_PASSWORD`, `ENCRYPTION_KEY` |
 
 Exemplo seguro para um secret; repita para os demais usando a lista acima. Não salve o YAML puro nem as senhas no repositório:
 
@@ -161,6 +164,7 @@ IP_DO_SERVIDOR nextcloud.feanor.com.br git.feanor.com.br musica.feanor.com.br
 IP_DO_SERVIDOR portainer.feanor.com.br ebooks.feanor.com.br filmes.feanor.com.br
 IP_DO_SERVIDOR radarr.feanor.com.br legendas.feanor.com.br
 IP_DO_SERVIDOR fotos.feanor.com.br jogos.feanor.com.br home.feanor.com.br
+IP_DO_SERVIDOR tarefas.feanor.com.br automacao.feanor.com.br financas.feanor.com.br
 IP_DO_SERVIDOR grafana.feanor.com.br prometheus.feanor.com.br alertmanager.feanor.com.br
 IP_DO_SERVIDOR argocd.feanor.com.br
 ```
@@ -186,6 +190,8 @@ kubectl get all -n homelab
 kubectl get pvc -A
 kubectl logs -n homelab deploy/nextcloud --tail=100
 kubectl logs -n homelab deploy/immich-server --tail=100
+kubectl logs -n homelab deploy/actual-budget --tail=100
+curl -fsS https://financas.feanor.com.br/health
 ```
 
 ## 7. URLs e primeiro acesso
@@ -203,6 +209,9 @@ kubectl logs -n homelab deploy/immich-server --tail=100
 | Bazarr | `https://legendas.feanor.com.br` |
 | Immich | `https://fotos.feanor.com.br` |
 | RomM | `https://jogos.feanor.com.br` |
+| Vikunja | `https://tarefas.feanor.com.br` |
+| n8n | `https://automacao.feanor.com.br` |
+| Actual Budget | `https://financas.feanor.com.br` |
 
 O SSH do Gitea usa NodePort:
 
@@ -210,7 +219,28 @@ O SSH do Gitea usa NodePort:
 git clone ssh://git@IP_DO_SERVIDOR:30022/USUARIO/REPOSITORIO.git
 ```
 
-A configuração inicial e as regras de segurança estão documentadas em [Radarr e Bazarr](RADARR-BAZARR.md).
+A configuração operacional do Radarr e do Bazarr está resumida em [Manutenção](MAINTENANCE.md#radarr-e-bazarr).
+
+### Actual Budget
+
+O Actual Budget usa o manifesto `98-actual-budget.yaml`, persiste seus dados no PVC `actual-budget-data` e não requer um banco externo. O Deployment usa a estratégia `Recreate` para impedir que dois pods acessem simultaneamente o mesmo banco SQLite durante atualizações.
+
+No primeiro acesso a `https://financas.feanor.com.br`:
+
+1. defina uma senha forte para o servidor;
+2. crie um orçamento e configure a moeda e a localização;
+3. cadastre as contas manualmente ou importe extratos OFX, QIF, QFX, CAMT ou CSV;
+4. opcionalmente, habilite criptografia de ponta a ponta nas configurações do orçamento.
+
+Para verificar o serviço:
+
+```bash
+kubectl rollout status deployment/actual-budget -n homelab --timeout=360s
+kubectl get pvc actual-budget-data -n homelab
+curl -fsS https://financas.feanor.com.br/health
+```
+
+Uma resposta `{"status":"UP"}` confirma que o servidor está saudável. O script de backup geral inclui esse PVC automaticamente.
 
 ## 8. Monitoramento (opcional)
 
@@ -259,7 +289,7 @@ Para restaurar em um computador novo, monte primeiro o disco em `/mnt/dados-home
 sudo ./restore.sh /mnt/backup-homelab/homelab-AAAAMMDDTHHMMSSZ
 ```
 
-Use `--force` apenas em um destino descartável ou após confirmar que os dados atuais podem ser apagados. Veja [BACKUP.md](BACKUP.md) para o procedimento completo.
+Use `--force` apenas em um destino descartável ou após confirmar que os dados atuais podem ser apagados. Veja [Backup e restauração](BACKUP.md) para o procedimento completo e [Manutenção](MAINTENANCE.md) para as rotinas operacionais.
 
 ## Operação diária
 

@@ -21,3 +21,4 @@ resources:
   - 95-romm.yaml
   - 96-vikunja.yaml
   - 97-n8n.yaml
+  - 98-actual-budget.yaml

@@ -1,5 +1,5 @@
 # ──────────────────────────────────────────────
-# Pré-requisitos (veja CERTIFICADOS.md para o passo a passo completo):
+# Pré-requisitos (veja INSTALLATION.md para instalação e MAINTENANCE.md para diagnóstico):
 # 1. cert-manager instalado no cluster
 # 2. DNS do feanor.com.br migrado para o Cloudflare
 # 3. Secret "cloudflare-api-token-secret" criado no namespace cert-manager
