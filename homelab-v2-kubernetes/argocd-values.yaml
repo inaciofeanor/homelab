@@ -1,95 +1,59 @@
-# ──────────────────────────────────────────────
-# values.yaml para o Helm chart argo-cd (argoproj/argo-helm)
-# Ajustado para k3s (single-node, 4 vCPU) + Traefik já embutido
-# ──────────────────────────────────────────────
+# Helm chart: argo/argo-cd 10.1.2 (Argo CD v3.4.4)
+# Perfil enxuto para o cluster k3s de no unico.
 
-# Dex é usado pra SSO externo (Google, GitHub, OIDC genérico). Como você já
-# está planejando o Authelia com OIDC nativo por app, não faz sentido pagar
-# o custo de CPU/RAM do Dex agora — o login local (admin) resolve por
-# enquanto. Pode reativar depois se quiser integrar via Dex em vez de
-# configurar o OIDC do Argo diretamente contra o Authelia.
+global:
+  domain: argocd.feanor.com.br
+
 dex:
   enabled: false
 
-# Notifications (Slack/Discord/e-mail em eventos de sync) — desligado por
-# padrão pra economizar recursos; ligue se quiser esse tipo de alerta.
 notifications:
   enabled: false
 
-# ApplicationSet — só é necessário se você for gerar Applications
-# dinamicamente (ex: um Application por diretório/cluster). Pro caso de uso
-# inicial (um Application "app-of-apps" apontando pro seu repo), não
-# precisa. Desligado por padrão; ligue se crescer.
 applicationSet:
   enabled: false
 
-# ──────────────────────────────────────────────
-# Componentes principais
-# ──────────────────────────────────────────────
 controller:
   resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
+    requests: {cpu: 30m, memory: 256Mi}
+    limits: {cpu: 500m, memory: 512Mi}
 
 repoServer:
   resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 300m
-      memory: 256Mi
+    requests: {cpu: 30m, memory: 128Mi}
+    limits: {cpu: 300m, memory: 256Mi}
 
 redis:
   resources:
-    requests:
-      cpu: 20m
-      memory: 64Mi
-    limits:
-      cpu: 100m
-      memory: 128Mi
+    requests: {cpu: 10m, memory: 64Mi}
+    limits: {cpu: 100m, memory: 128Mi}
 
 server:
   resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
-  # O Traefik já termina o TLS (usando o mesmo certificado wildcard dos
-  # outros serviços). Sem isso, o argocd-server tenta falar TLS por conta
-  # própria por trás do Traefik e você acaba com "TLS dentro de TLS" —
-  # o sintoma mais comum é a UI dando erro de certificado ou redirect loop.
+    requests: {cpu: 20m, memory: 128Mi}
+    limits: {cpu: 200m, memory: 256Mi}
   extraArgs:
     - --insecure
-
   ingress:
     enabled: true
+    controller: generic
     ingressClassName: traefik
-    hosts:
-      - argocd.feanor.com.br
+    hostname: argocd.feanor.com.br
+    path: /
     pathType: Prefix
-    tls:
+    tls: false
+    extraTls:
       - hosts:
           - argocd.feanor.com.br
         secretName: feanor-wildcard-tls
     annotations:
       gethomepage.dev/enabled: "true"
-      gethomepage.dev/name: "ArgoCD"
-      gethomepage.dev/description: "GitOps — deploy das aplicações"
-      gethomepage.dev/group: "Administração"
+      gethomepage.dev/name: "Argo CD"
+      gethomepage.dev/description: "GitOps - deploy das aplicacoes"
+      gethomepage.dev/group: "Administracao"
       gethomepage.dev/icon: "argocd.png"
       gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
 
-# Mesmo caso do "server.extraArgs: --insecure" acima, só que na forma nova
-# de configuração do chart (algumas versões leem daqui em vez de extraArgs).
-# Deixar os dois não causa conflito.
 configs:
   params:
     server.insecure: true
