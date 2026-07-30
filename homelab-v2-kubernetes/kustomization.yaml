@@ -3,6 +3,9 @@ kind: Kustomization
 resources:
   - 00-namespace.yaml
   - 02-sealed-secrets.yaml
+  - 03-romm-screenscraper-sealed-secret.yaml
+  - 04-vikunja-sealed-secret.yaml
+  - 04-n8n-sealed-secret.yaml
   - 05-certificates.yaml
   - 10-portainer.yaml
   - 20-nextcloud.yaml
@@ -11,6 +14,11 @@ resources:
   - 50-ingress.yaml
   - 60-kavita.yaml
   - 70-jellyfin.yaml
+  - 75-radarr-bazarr.yaml
   - 80-homepage.yaml
+  - 85-pod-cleanup-cronjob.yaml
   - 90-immich.yaml
   - 95-romm.yaml
+  - 96-vikunja.yaml
+  - 97-n8n.yaml
+  - 98-actual-budget.yaml

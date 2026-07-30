@@ -1,0 +1,176 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-config
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bazarr-config
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: radarr
+  template:
+    metadata:
+      labels:
+        app: radarr
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: radarr
+          image: lscr.io/linuxserver/radarr:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: PUID, value: "1000"}
+            - {name: PGID, value: "1000"}
+            - {name: TZ, value: "America/Sao_Paulo"}
+          ports:
+            - containerPort: 7878
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: 750m, memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - {name: config, mountPath: /config}
+            - {name: media, mountPath: /media}
+      volumes:
+        - name: config
+          persistentVolumeClaim: {claimName: radarr-config}
+        - name: media
+          hostPath: {path: /mnt/dados-homelab-novo/media, type: Directory}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bazarr
+  namespace: homelab
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: bazarr}
+  template:
+    metadata:
+      labels: {app: bazarr}
+    spec:
+      securityContext:
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: bazarr
+          image: lscr.io/linuxserver/bazarr:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: PUID, value: "1000"}
+            - {name: PGID, value: "1000"}
+            - {name: TZ, value: "America/Sao_Paulo"}
+          ports:
+            - containerPort: 6767
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - {name: config, mountPath: /config}
+            - {name: media, mountPath: /media}
+      volumes:
+        - name: config
+          persistentVolumeClaim: {claimName: bazarr-config}
+        - name: media
+          hostPath: {path: /mnt/dados-homelab-novo/media, type: Directory}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: radarr, namespace: homelab}
+spec:
+  selector: {app: radarr}
+  ports:
+    - {port: 7878, targetPort: 7878}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: bazarr, namespace: homelab}
+spec:
+  selector: {app: bazarr}
+  ports:
+    - {port: 6767, targetPort: 6767}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: radarr
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Radarr"
+    gethomepage.dev/description: "Catálogo de filmes"
+    gethomepage.dev/group: "Mídia e Jogos"
+    gethomepage.dev/icon: "radarr.png"
+    gethomepage.dev/pod-selector: "app=radarr"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [radarr.feanor.com.br]
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: radarr.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: radarr
+                port: {number: 7878}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bazarr
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Bazarr"
+    gethomepage.dev/description: "Legendas de filmes e séries"
+    gethomepage.dev/group: "Mídia e Jogos"
+    gethomepage.dev/icon: "bazarr.png"
+    gethomepage.dev/pod-selector: "app=bazarr"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [legendas.feanor.com.br]
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: legendas.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bazarr
+                port: {number: 6767}

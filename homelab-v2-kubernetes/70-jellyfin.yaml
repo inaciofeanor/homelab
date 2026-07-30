@@ -97,7 +97,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Jellyfin"
     gethomepage.dev/description: "Filmes e séries"
-    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/group: "Mídia e Jogos"
     gethomepage.dev/icon: "jellyfin.png"
     gethomepage.dev/pod-selector: "app=jellyfin"
 spec:

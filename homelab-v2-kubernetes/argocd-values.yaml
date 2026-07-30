@@ -83,7 +83,7 @@ server:
       gethomepage.dev/enabled: "true"
       gethomepage.dev/name: "ArgoCD"
       gethomepage.dev/description: "GitOps — deploy das aplicações"
-      gethomepage.dev/group: "Infraestrutura"
+      gethomepage.dev/group: "Administração"
       gethomepage.dev/icon: "argocd.png"
       gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
 

@@ -40,10 +40,10 @@ spec:
           resources:
             requests:
               cpu: 100m        # era 250m
-              memory: 256Mi     # era 512Mi
+              memory: 512Mi     # era 512Mi
             limits:
               cpu: 500m         # novo
-              memory: 1Gi
+              memory: 2Gi
           securityContext:
             # Mesma ressalva do Navidrome: não fixamos runAsUser porque
             # depende da ownership da pasta de ebooks no hostPath abaixo.
@@ -87,7 +87,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Kavita"
     gethomepage.dev/description: "Ebooks"
-    gethomepage.dev/group: "Mídia"
+    gethomepage.dev/group: "Mídia e Jogos"
     gethomepage.dev/icon: "kavita.png"
     gethomepage.dev/pod-selector: "app=kavita"
 spec:
