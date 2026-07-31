@@ -69,7 +69,7 @@ spec:
     spec:
       containers:
         - name: mariadb
-          image: mariadb:latest
+          image: mariadb@sha256:628f228f0fd5913a220438693576b29b6fe4dc1fa0a1298c0e98579fae28635f
           imagePullPolicy: IfNotPresent
           env:
             - name: MARIADB_DATABASE
@@ -128,7 +128,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: romm
-          image: rommapp/romm:latest
+          image: rommapp/romm@sha256:91f6611eca5a4dafc4f4a1d72a1ed7dd66a11375d939f28410dc1d1de0b80b1b
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
