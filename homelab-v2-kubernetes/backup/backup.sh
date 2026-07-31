@@ -59,7 +59,7 @@ if [[ -f "$CONFIG_FILE" ]]; then
   source "$CONFIG_FILE"
 else
   # Deve acompanhar os hostPath declarados nos manifests.
-  HOST_PATHS=$'/mnt/dados-homelab-novo/ebooks\n/mnt/dados-homelab-novo/media\n/mnt/dados-homelab-novo/music\n/mnt/dados-homelab-novo/photos\n/mnt/dados-homelab-novo/roms'
+  HOST_PATHS=$'/mnt/dados-homelab-novo/ebooks\n/mnt/dados-jellyfin/media\n/mnt/dados-homelab-novo/music\n/mnt/dados-homelab-novo/photos\n/mnt/dados-homelab-novo/roms'
 fi
 
 mkdir -p -- "$DESTINATION"

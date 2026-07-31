@@ -37,15 +37,24 @@ git switch dev
 Antes de aplicar qualquer recurso, revise nomes de domínio, e-mail do ACME, tamanho dos PVCs e os `hostPath` dos manifestos. Os caminhos abaixo devem existir; crie-os e ajuste o dono conforme o serviço que irá escrever neles:
 
 ```bash
-sudo mkdir -p /mnt/dados-homelab-novo/{ebooks,media,music,photos,roms}
+sudo mkdir -p /mnt/dados-homelab-novo/{ebooks,music,photos,roms}
+sudo mkdir -p /mnt/dados-jellyfin
 ```
+
+O disco dedicado de m�dia deve ser persistido no `/etc/fstab`. Para o disco identificado pelo label `jellyfin-filmes`:
+
+```fstab
+LABEL=jellyfin-filmes /mnt/dados-jellyfin ext4 defaults,nofail 0 2
+```
+
+Depois de executar `sudo mount -a`, crie `/mnt/dados-jellyfin/media` com UID e GID `1000`.
 
 | Serviço | Manifesto | Caminho de mídia |
 | --- | --- | --- |
 | Navidrome | `40-navidrome.yaml` | `/mnt/dados-homelab-novo/music` |
 | Kavita | `60-kavita.yaml` | `/mnt/dados-homelab-novo/ebooks` |
-| Jellyfin | `70-jellyfin.yaml` | `/mnt/dados-homelab-novo/media` |
-| Radarr e Bazarr | `75-radarr-bazarr.yaml` | `/mnt/dados-homelab-novo/media` |
+| Jellyfin | `70-jellyfin.yaml` | `/mnt/dados-jellyfin/media` |
+| Radarr e Bazarr | `75-radarr-bazarr.yaml` | `/mnt/dados-jellyfin/media` |
 | Immich | `90-immich.yaml` | `/mnt/dados-homelab-novo/photos` |
 | RomM | `95-romm.yaml` | caminho configurado no `hostPath` do manifesto |
 

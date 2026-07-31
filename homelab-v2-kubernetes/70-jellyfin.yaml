@@ -73,7 +73,7 @@ spec:
         - name: media
           hostPath:
             # AJUSTE para o caminho real da sua pasta de filmes/séries no notebook
-            path: /mnt/jellyfin-filmes/media/
+            path: /mnt/dados-jellyfin/media
             type: Directory
 ---
 apiVersion: v1

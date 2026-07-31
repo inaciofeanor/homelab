@@ -62,7 +62,7 @@ spec:
         - name: config
           persistentVolumeClaim: {claimName: radarr-config}
         - name: media
-          hostPath: {path: /mnt/dados-homelab-novo/media, type: Directory}
+          hostPath: {path: /mnt/dados-jellyfin/media, type: Directory}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -101,7 +101,7 @@ spec:
         - name: config
           persistentVolumeClaim: {claimName: bazarr-config}
         - name: media
-          hostPath: {path: /mnt/dados-homelab-novo/media, type: Directory}
+          hostPath: {path: /mnt/dados-jellyfin/media, type: Directory}
 ---
 apiVersion: v1
 kind: Service
