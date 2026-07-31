@@ -132,6 +132,7 @@ Instale `kubeseal`, crie os `Secret` necessários com valores novos e sele cada 
 | `immich-db-secrets` | `DB_PASSWORD` |
 | `romm-secrets` | `DB_PASSWD`, `MARIADB_ROOT_PASSWORD`, `ROMM_AUTH_SECRET_KEY` |
 | `romm-screenscraper-secrets` | `SCREENSCRAPER_USER`, `SCREENSCRAPER_PASSWORD` (opcional) |
+| `romm-retroachievements-secrets` | `RETROACHIEVEMENTS_API_KEY` (opcional) |
 | `vikunja-secrets` | `DB_PASSWORD` |
 | `n8n-secrets` | `DB_PASSWORD`, `ENCRYPTION_KEY` |
 

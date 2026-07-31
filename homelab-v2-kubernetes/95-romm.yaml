@@ -128,11 +128,13 @@ spec:
       enableServiceLinks: false
       containers:
         - name: romm
-          image: rommapp/romm@sha256:91f6611eca5a4dafc4f4a1d72a1ed7dd66a11375d939f28410dc1d1de0b80b1b
+          image: rommapp/romm:5.1.0@sha256:341a3cd70ae482912948e159121a4dbc0ab83784e97bf964a2bde7fc529d0e15
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
                 name: romm-screenscraper-secrets
+            - secretRef:
+                name: romm-retroachievements-secrets
           env:
             - name: DB_HOST
               value: romm-db

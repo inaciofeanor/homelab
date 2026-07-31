@@ -4,6 +4,7 @@ resources:
   - 00-namespace.yaml
   - 02-sealed-secrets.yaml
   - 03-romm-screenscraper-sealed-secret.yaml
+  - 04-romm-retroachievements-sealed-secret.yaml
   - 04-vikunja-sealed-secret.yaml
   - 04-n8n-sealed-secret.yaml
   - 05-certificates.yaml
