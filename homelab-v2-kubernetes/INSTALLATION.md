@@ -165,7 +165,7 @@ kubectl create secret generic cloudflare-api-token-secret \
   --namespace cert-manager --from-literal=api-token='COLE_O_TOKEN_AQUI'
 ```
 
-Revise o endereço de e-mail e os domínios em `05-certificates.yaml`. O certificado wildcard é criado nos namespaces `homelab`, `portainer` e `monitoring`.
+Revise o endereço de e-mail e os domínios em `07-certificates.yaml`. O certificado wildcard é criado nos namespaces `homelab`, `portainer` e `monitoring`.
 
 Se ainda não houver DNS interno ou público, adicione temporariamente no cliente:
 
@@ -275,7 +275,10 @@ Instale somente depois que a stack manual estiver validada. O arquivo `argocd-va
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 kubectl create namespace argocd
-helm upgrade --install argocd argo/argo-cd -n argocd -f argocd-values.yaml
+helm upgrade --install argocd argo/argo-cd \
+  --version 10.2.2 \
+  --namespace argocd \
+  -f homelab-v2-kubernetes/argocd-values.yaml
 kubectl get pods -n argocd -w
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 -d; echo

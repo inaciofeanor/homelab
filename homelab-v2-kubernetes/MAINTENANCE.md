@@ -151,6 +151,7 @@ O Argo CD é opcional e usa `argocd-values.yaml`:
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 helm upgrade --install argocd argo/argo-cd \
+  --version 10.2.2 \
   --namespace argocd --create-namespace \
   -f homelab-v2-kubernetes/argocd-values.yaml
 kubectl get pods -n argocd
