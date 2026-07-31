@@ -18,7 +18,7 @@ metadata:
   name: jellyfin
   namespace: homelab
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: jellyfin
