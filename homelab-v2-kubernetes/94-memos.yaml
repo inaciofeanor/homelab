@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: memos-data
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memos
+  namespace: homelab
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: memos
+  template:
+    metadata:
+      labels:
+        app: memos
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: memos
+          image: neosmemo/memos:0.30.0@sha256:51a4cef418b1f173ac37139ad99de08da5b8662136007231d3ac8a0498a3095a
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MEMOS_PORT
+              value: "5230"
+            - name: MEMOS_DATA
+              value: /var/opt/memos
+            - name: MEMOS_DRIVER
+              value: sqlite
+            - name: MEMOS_DEMO
+              value: "false"
+            - name: MEMOS_LOG_LEVEL
+              value: info
+          ports:
+            - name: http
+              containerPort: 5230
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            - name: data
+              mountPath: /var/opt/memos
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: memos-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memos
+  namespace: homelab
+spec:
+  selector:
+    app: memos
+  ports:
+    - name: http
+      port: 5230
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: memos
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Memos"
+    gethomepage.dev/description: "Diário e notas pessoais"
+    gethomepage.dev/group: "Principal"
+    gethomepage.dev/icon: "memos.png"
+    gethomepage.dev/pod-selector: "app=memos"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - diario.feanor.com.br
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: diario.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: memos
+                port:
+                  number: 5230

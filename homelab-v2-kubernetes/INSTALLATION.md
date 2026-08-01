@@ -4,7 +4,7 @@ Este guia instala a stack atual deste repositório em um servidor Linux de nó �
 
 ## O que será instalado
 
-No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL) e Actual Budget. O Portainer é instalado no namespace `portainer`.
+No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), Memos (SQLite), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL) e Actual Budget (SQLite). O Portainer é instalado no namespace `portainer`.
 
 Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitoramento (Prometheus, Grafana e Alertmanager) e Argo CD.
 
@@ -174,7 +174,7 @@ IP_DO_SERVIDOR nextcloud.feanor.com.br git.feanor.com.br musica.feanor.com.br
 IP_DO_SERVIDOR portainer.feanor.com.br ebooks.feanor.com.br filmes.feanor.com.br
 IP_DO_SERVIDOR radarr.feanor.com.br legendas.feanor.com.br
 IP_DO_SERVIDOR fotos.feanor.com.br jogos.feanor.com.br home.feanor.com.br
-IP_DO_SERVIDOR tarefas.feanor.com.br automacao.feanor.com.br financas.feanor.com.br
+IP_DO_SERVIDOR tarefas.feanor.com.br automacao.feanor.com.br financas.feanor.com.br diario.feanor.com.br
 IP_DO_SERVIDOR grafana.feanor.com.br prometheus.feanor.com.br alertmanager.feanor.com.br
 IP_DO_SERVIDOR argocd.feanor.com.br
 ```
@@ -201,7 +201,9 @@ kubectl get pvc -A
 kubectl logs -n homelab deploy/nextcloud --tail=100
 kubectl logs -n homelab deploy/immich-server --tail=100
 kubectl logs -n homelab deploy/actual-budget --tail=100
+kubectl logs -n homelab deploy/memos --tail=100
 curl -fsS https://financas.feanor.com.br/health
+curl -fsS -o /dev/null https://diario.feanor.com.br/
 ```
 
 ## 7. URLs e primeiro acesso
@@ -222,6 +224,7 @@ curl -fsS https://financas.feanor.com.br/health
 | Vikunja | `https://tarefas.feanor.com.br` |
 | n8n | `https://automacao.feanor.com.br` |
 | Actual Budget | `https://financas.feanor.com.br` |
+| Memos | `https://diario.feanor.com.br` |
 
 O SSH do Gitea usa NodePort:
 
@@ -251,6 +254,22 @@ curl -fsS https://financas.feanor.com.br/health
 ```
 
 Uma resposta `{"status":"UP"}` confirma que o servidor está saudável. O script de backup geral inclui esse PVC automaticamente.
+
+### Memos
+
+O Memos usa o manifesto `94-memos.yaml`, SQLite e o PVC `memos-data`. O Deployment mantém uma única réplica com estratégia `Recreate`, evitando que dois processos acessem o mesmo banco durante atualizações. A instância não publica uma URL pública no backend, mantendo desativadas as superfícies públicas de exploração e RSS.
+
+No primeiro acesso a `https://diario.feanor.com.br`, crie a conta administrativa. Em seguida, abra as configurações da instância e desative o cadastro de novos usuários. Não habilite acesso público caso o serviço seja usado como diário pessoal.
+
+Para verificar o serviço:
+
+```bash
+kubectl rollout status deployment/memos -n homelab --timeout=180s
+kubectl get pvc memos-data -n homelab
+curl -fsS -o /dev/null https://diario.feanor.com.br/
+```
+
+O script de backup geral inclui o banco SQLite e os anexos armazenados nesse PVC automaticamente.
 
 ## 8. Monitoramento (opcional)
 

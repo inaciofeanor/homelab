@@ -44,6 +44,7 @@ Exemplos de health checks:
 ```bash
 curl -fsS https://financas.feanor.com.br/health
 curl -fsS https://tarefas.feanor.com.br/api/v1/info
+curl -fsS -o /dev/null https://diario.feanor.com.br/
 ```
 
 ## Alterar e atualizar a stack
@@ -66,7 +67,7 @@ kubectl rollout restart deployment/DEPLOYMENT -n NAMESPACE
 kubectl rollout status deployment/DEPLOYMENT -n NAMESPACE --timeout=300s
 ```
 
-Antes de atualizar bancos ou aplicações que armazenam dados, execute um backup. O Actual Budget usa SQLite e estratégia `Recreate`; não altere para `RollingUpdate`, pois dois pods não devem acessar o mesmo arquivo simultaneamente.
+Antes de atualizar bancos ou aplicações que armazenam dados, execute um backup. Actual Budget e Memos usam SQLite e estratégia `Recreate`; não altere para `RollingUpdate`, pois dois pods não devem acessar o mesmo arquivo simultaneamente.
 
 ## Backup
 

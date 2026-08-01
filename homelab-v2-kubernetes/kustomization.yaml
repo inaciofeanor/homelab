@@ -25,6 +25,7 @@ resources:
   - 80-homepage.yaml
   - 85-pod-cleanup-cronjob.yaml
   - 90-immich.yaml
+  - 94-memos.yaml
   - 95-romm.yaml
   - 96-vikunja.yaml
   - 97-n8n.yaml
