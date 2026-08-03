@@ -67,7 +67,7 @@ kubectl rollout restart deployment/DEPLOYMENT -n NAMESPACE
 kubectl rollout status deployment/DEPLOYMENT -n NAMESPACE --timeout=300s
 ```
 
-Antes de atualizar bancos ou aplicações que armazenam dados, execute um backup. Actual Budget e Memos usam SQLite e estratégia `Recreate`; não altere para `RollingUpdate`, pois dois pods não devem acessar o mesmo arquivo simultaneamente.
+Antes de atualizar bancos ou aplicações que armazenam dados, execute um backup. Actual Budget 26.8.0 e Memos usam SQLite e estratégia `Recreate`; não altere para `RollingUpdate`, pois dois pods não devem acessar o mesmo arquivo simultaneamente. Consulte as notas da versão do Actual Budget antes de atualizar e mantenha a imagem fixada por tag e digest.
 
 ## Backup
 

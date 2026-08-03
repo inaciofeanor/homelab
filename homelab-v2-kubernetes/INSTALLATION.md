@@ -236,7 +236,7 @@ A configuração operacional do Radarr e do Bazarr está resumida em [Manutenç�
 
 ### Actual Budget
 
-O Actual Budget usa o manifesto `98-actual-budget.yaml`, persiste seus dados no PVC `actual-budget-data` e não requer um banco externo. O Deployment usa a estratégia `Recreate` para impedir que dois pods acessem simultaneamente o mesmo banco SQLite durante atualizações.
+O Actual Budget 26.8.0 usa o manifesto `98-actual-budget.yaml`, persiste seus dados no PVC `actual-budget-data` e não requer um banco externo. A imagem está fixada pelo digest `sha256:ef66469837852d04dd67e70cb069dca71a95e6ab135a905f6568730bf3f71480` para `linux/amd64`. O Deployment usa a estratégia `Recreate` para impedir que dois pods acessem simultaneamente o mesmo banco SQLite durante atualizações. Consulte as [notas da versão 26.8.0](https://actualbudget.org/blog/release-26.8.0) antes de futuras atualizações.
 
 No primeiro acesso a `https://financas.feanor.com.br`:
 
