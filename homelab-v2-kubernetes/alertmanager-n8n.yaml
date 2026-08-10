@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: n8n-telegram
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: homelab
+spec:
+  route:
+    receiver: n8n-telegram
+    matchers:
+      - name: alertname
+        matchType: =~
+        value: HomelabPod.*
+    groupBy:
+      - alertname
+      - namespace
+      - pod
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+  receivers:
+    - name: n8n-telegram
+      webhookConfigs:
+        - url: https://automacao.feanor.com.br/webhook/alertmanager
+          sendResolved: true

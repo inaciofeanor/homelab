@@ -284,6 +284,8 @@ kubectl create namespace monitoring
 helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
   --namespace monitoring -f monitoring-values.local.yaml
 kubectl get pods -n monitoring -w
+kubectl apply -f monitoring-alerts.yaml
+kubectl get prometheusrule -n homelab homelab-pod-alerts
 ```
 
 ## 9. Argo CD (opcional)

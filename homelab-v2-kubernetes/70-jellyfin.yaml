@@ -19,6 +19,8 @@ metadata:
   namespace: homelab
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: jellyfin
@@ -41,8 +43,8 @@ spec:
             - containerPort: 8096
           resources:
             requests:
-              cpu: 200m        # era 500m — ocioso não precisa disso
-              memory: 768Mi     # era 1Gi
+              cpu: 200m
+              memory: 1Gi
             limits:
               cpu: "2"          # mantém — precisa pra transcode
               memory: 3Gi
