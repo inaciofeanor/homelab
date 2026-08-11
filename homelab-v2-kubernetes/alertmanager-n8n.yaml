@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: n8n-telegram
-  namespace: monitoring
+  namespace: homelab
   labels:
     alertmanagerConfig: homelab
 spec:

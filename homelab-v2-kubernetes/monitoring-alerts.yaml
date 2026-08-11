@@ -33,6 +33,18 @@ spec:
             summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} em CrashLoopBackOff"
             description: "O container {{ $labels.container }} está reiniciando continuamente há mais de 5 minutos."
 
+        - alert: HomelabPodPending
+          expr: |
+            max by (namespace, pod) (
+              kube_pod_status_phase{phase="Pending"}
+            ) == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} pendente"
+            description: "O pod está Pending há mais de 5 minutos; verifique eventos e capacidade do nó."
+
         - alert: HomelabDeploymentReplicasUnavailable
           expr: |
             kube_deployment_spec_replicas
