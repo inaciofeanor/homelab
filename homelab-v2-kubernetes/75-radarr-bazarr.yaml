@@ -42,7 +42,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: radarr
-          image: lscr.io/linuxserver/radarr:latest
+          image: lscr.io/linuxserver/radarr@sha256:e35056574cdc695a9ee745aa1ecda9eab3842450bf4b7b8471b023790fa3861d
           imagePullPolicy: IfNotPresent
           env:
             - {name: PUID, value: "1000"}
@@ -51,7 +51,7 @@ spec:
           ports:
             - containerPort: 7878
           resources:
-            requests: {cpu: 100m, memory: 256Mi}
+            requests: {cpu: 100m, memory: 384Mi}
             limits: {cpu: 750m, memory: 1Gi}
           securityContext:
             allowPrivilegeEscalation: false
@@ -62,7 +62,7 @@ spec:
         - name: config
           persistentVolumeClaim: {claimName: radarr-config}
         - name: media
-          hostPath: {path: /mnt/dados-homelab-novo/media, type: Directory}
+          hostPath: {path: /mnt/dados-jellyfin/media, type: Directory}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -81,7 +81,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: bazarr
-          image: lscr.io/linuxserver/bazarr:latest
+          image: lscr.io/linuxserver/bazarr@sha256:ab401a0f361cfad328e444838b13d5b334b189d0f556fc91a3623eb581df36df
           imagePullPolicy: IfNotPresent
           env:
             - {name: PUID, value: "1000"}
@@ -101,7 +101,7 @@ spec:
         - name: config
           persistentVolumeClaim: {claimName: bazarr-config}
         - name: media
-          hostPath: {path: /mnt/dados-homelab-novo/media, type: Directory}
+          hostPath: {path: /mnt/dados-jellyfin/media, type: Directory}
 ---
 apiVersion: v1
 kind: Service

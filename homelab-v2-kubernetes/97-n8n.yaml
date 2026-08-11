@@ -85,7 +85,7 @@ spec:
           command: ["/bin/sh", "-ec", "until pg_isready -h n8n-db -U n8n -d n8n; do sleep 2; done"]
       containers:
         - name: n8n
-          image: docker.n8n.io/n8nio/n8n:latest
+          image: docker.n8n.io/n8nio/n8n@sha256:3647d2b986f03174a7c0c6a0cd57bc870a769ea7a5538838b94d9714b57e9057
           imagePullPolicy: IfNotPresent
           env:
             - {name: DB_TYPE, value: postgresdb}
@@ -112,7 +112,7 @@ spec:
           ports:
             - {name: http, containerPort: 5678}
           resources:
-            requests: {cpu: 100m, memory: 256Mi}
+            requests: {cpu: 100m, memory: 512Mi}
             limits: {cpu: 750m, memory: 768Mi}
           securityContext:
             allowPrivilegeEscalation: false

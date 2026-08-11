@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: kavita
-          image: ghcr.io/kareadita/kavita:latest
+          image: ghcr.io/kareadita/kavita@sha256:880a8feff0833e860575f8e08788e4b4f59f8659afd17206566aae88a525130d
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
@@ -40,7 +40,7 @@ spec:
           resources:
             requests:
               cpu: 100m        # era 250m
-              memory: 512Mi     # era 512Mi
+              memory: 1Gi
             limits:
               cpu: 500m         # novo
               memory: 2Gi

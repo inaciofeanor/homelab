@@ -1,13 +1,19 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  # Base e segredos
   - 00-namespace.yaml
   - 02-sealed-secrets.yaml
   - 03-romm-screenscraper-sealed-secret.yaml
-  - 04-vikunja-sealed-secret.yaml
-  - 04-n8n-sealed-secret.yaml
-  - 05-certificates.yaml
-  - 06-argocd-certificate.yaml
+  - 04-romm-retroachievements-sealed-secret.yaml
+  - 05-vikunja-sealed-secret.yaml
+  - 06-n8n-sealed-secret.yaml
+
+  # Certificados
+  - 07-certificates.yaml
+  - 08-argocd-certificate.yaml
+
+  # Serviços e aplicações
   - 10-portainer.yaml
   - 20-nextcloud.yaml
   - 30-gitea.yaml
@@ -19,8 +25,11 @@ resources:
   - 80-homepage.yaml
   - 85-pod-cleanup-cronjob.yaml
   - 90-immich.yaml
+  - 94-memos.yaml
   - 95-romm.yaml
   - 96-vikunja.yaml
   - 97-n8n.yaml
   - 98-actual-budget.yaml
+
+  # GitOps
   - 99-argocd-application.yaml

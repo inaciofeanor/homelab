@@ -1,0 +1,57 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-pod-alerts
+  namespace: homelab
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: homelab.pods
+      rules:
+        - alert: HomelabPodFailed
+          expr: |
+            max by (namespace, pod) (
+              kube_pod_status_phase{phase=~"Failed|Unknown"}
+            ) == 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} indisponível"
+            description: "O pod está no estado Failed ou Unknown há mais de 2 minutos."
+
+        - alert: HomelabPodCrashLooping
+          expr: |
+            max by (namespace, pod, container) (
+              kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"}
+            ) == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} em CrashLoopBackOff"
+            description: "O container {{ $labels.container }} está reiniciando continuamente há mais de 5 minutos."
+
+        - alert: HomelabPodPending
+          expr: |
+            max by (namespace, pod) (
+              kube_pod_status_phase{phase="Pending"}
+            ) == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} pendente"
+            description: "O pod está Pending há mais de 5 minutos; verifique eventos e capacidade do nó."
+
+        - alert: HomelabDeploymentReplicasUnavailable
+          expr: |
+            kube_deployment_spec_replicas
+              > kube_deployment_status_replicas_available
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Réplicas indisponíveis em {{ $labels.namespace }}/{{ $labels.deployment }}"
+            description: "O Deployment possui menos réplicas disponíveis do que o desejado há mais de 5 minutos."

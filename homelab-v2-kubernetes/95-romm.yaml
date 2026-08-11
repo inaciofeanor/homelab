@@ -69,7 +69,7 @@ spec:
     spec:
       containers:
         - name: mariadb
-          image: mariadb:latest
+          image: mariadb@sha256:628f228f0fd5913a220438693576b29b6fe4dc1fa0a1298c0e98579fae28635f
           imagePullPolicy: IfNotPresent
           env:
             - name: MARIADB_DATABASE
@@ -86,6 +86,13 @@ spec:
                 secretKeyRef:
                   name: romm-secrets
                   key: MARIADB_ROOT_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           volumeMounts:
             - name: data
               mountPath: /var/lib/mysql
@@ -128,11 +135,13 @@ spec:
       enableServiceLinks: false
       containers:
         - name: romm
-          image: rommapp/romm:latest
+          image: rommapp/romm:5.1.0@sha256:341a3cd70ae482912948e159121a4dbc0ab83784e97bf964a2bde7fc529d0e15
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
                 name: romm-screenscraper-secrets
+            - secretRef:
+                name: romm-retroachievements-secrets
           env:
             - name: DB_HOST
               value: romm-db
@@ -157,6 +166,13 @@ spec:
             #   value: ""
             # - name: IGDB_CLIENT_SECRET
             #   value: ""
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
           ports:
             - containerPort: 8080
           volumeMounts:

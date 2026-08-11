@@ -159,7 +159,7 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: configure-trusted-domain
-          image: nextcloud:latest
+          image: nextcloud@sha256:e93ccfc952c95f18175f3d297fb2f60c35070c05ca976050c250a9ddab793e75
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
@@ -173,7 +173,7 @@ spec:
               mountPath: /var/www/html
       containers:
         - name: nextcloud
-          image: nextcloud:latest
+          image: nextcloud@sha256:e93ccfc952c95f18175f3d297fb2f60c35070c05ca976050c250a9ddab793e75
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:

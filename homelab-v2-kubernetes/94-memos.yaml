@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: actual-budget-data
+  name: memos-data
   namespace: homelab
 spec:
   accessModes: ["ReadWriteOnce"]
@@ -13,7 +13,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: actual-budget
+  name: memos
   namespace: homelab
 spec:
   replicas: 1
@@ -21,23 +21,39 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: actual-budget
+      app: memos
   template:
     metadata:
       labels:
-        app: actual-budget
+        app: memos
     spec:
+      enableServiceLinks: false
       securityContext:
-        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: actual-budget
-          image: actualbudget/actual-server:26.8.0@sha256:ef66469837852d04dd67e70cb069dca71a95e6ab135a905f6568730bf3f71480
+        - name: memos
+          image: neosmemo/memos:0.30.0@sha256:51a4cef418b1f173ac37139ad99de08da5b8662136007231d3ac8a0498a3095a
           imagePullPolicy: IfNotPresent
+          env:
+            - name: MEMOS_PORT
+              value: "5230"
+            - name: MEMOS_DATA
+              value: /var/opt/memos
+            - name: MEMOS_DRIVER
+              value: sqlite
+            - name: MEMOS_DEMO
+              value: "false"
+            - name: MEMOS_LOG_LEVEL
+              value: info
           ports:
             - name: http
-              containerPort: 5006
+              containerPort: 5230
           resources:
             requests:
               cpu: 50m
@@ -66,51 +82,51 @@ spec:
             periodSeconds: 30
           volumeMounts:
             - name: data
-              mountPath: /data
+              mountPath: /var/opt/memos
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: actual-budget-data
+            claimName: memos-data
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: actual-budget
+  name: memos
   namespace: homelab
 spec:
   selector:
-    app: actual-budget
+    app: memos
   ports:
     - name: http
-      port: 5006
+      port: 5230
       targetPort: http
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: actual-budget
+  name: memos
   namespace: homelab
   annotations:
     gethomepage.dev/enabled: "true"
-    gethomepage.dev/name: "Actual Budget"
-    gethomepage.dev/description: "Controle financeiro pessoal"
+    gethomepage.dev/name: "Memos"
+    gethomepage.dev/description: "Diário e notas pessoais"
     gethomepage.dev/group: "Principal"
-    gethomepage.dev/icon: "actual-budget.png"
-    gethomepage.dev/pod-selector: "app=actual-budget"
+    gethomepage.dev/icon: "memos.png"
+    gethomepage.dev/pod-selector: "app=memos"
 spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - financas.feanor.com.br
+        - diario.feanor.com.br
       secretName: feanor-wildcard-tls
   rules:
-    - host: financas.feanor.com.br
+    - host: diario.feanor.com.br
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: actual-budget
+                name: memos
                 port:
-                  number: 5006
+                  number: 5230

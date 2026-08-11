@@ -35,6 +35,8 @@ metadata:
   namespace: homelab
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: immich-postgres
@@ -104,6 +106,8 @@ metadata:
   namespace: homelab
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: immich-redis
@@ -145,6 +149,8 @@ metadata:
   namespace: homelab
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: immich-machine-learning
@@ -161,7 +167,7 @@ spec:
             - containerPort: 3003
           resources:
             requests:
-              cpu: 1
+              cpu: 500m
               memory: 1Gi
             limits:
               memory: 3Gi
@@ -196,6 +202,8 @@ metadata:
   namespace: homelab
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: immich-server
@@ -244,7 +252,7 @@ spec:
           resources:
             requests:
               cpu: 500m
-              memory: 512Mi
+              memory: 1.5Gi
             limits:
               memory: 2Gi
           volumeMounts:

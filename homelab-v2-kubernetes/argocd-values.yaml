@@ -1,4 +1,4 @@
-# Helm chart: argo/argo-cd 10.1.2 (Argo CD v3.4.4)
+# Helm chart: argo/argo-cd 10.2.2 (Argo CD v3.4.6)
 # Perfil enxuto para o cluster k3s de no unico.
 
 global:
@@ -11,7 +11,7 @@ notifications:
   enabled: false
 
 applicationSet:
-  enabled: false
+  replicas: 0
 
 controller:
   resources:

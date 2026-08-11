@@ -4,7 +4,7 @@ Este guia instala a stack atual deste repositório em um servidor Linux de nó �
 
 ## O que será instalado
 
-No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL) e Actual Budget. O Portainer é instalado no namespace `portainer`.
+No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), Memos (SQLite), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL) e Actual Budget (SQLite). O Portainer é instalado no namespace `portainer`.
 
 Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitoramento (Prometheus, Grafana e Alertmanager) e Argo CD.
 
@@ -37,15 +37,24 @@ git switch dev
 Antes de aplicar qualquer recurso, revise nomes de domínio, e-mail do ACME, tamanho dos PVCs e os `hostPath` dos manifestos. Os caminhos abaixo devem existir; crie-os e ajuste o dono conforme o serviço que irá escrever neles:
 
 ```bash
-sudo mkdir -p /mnt/dados-homelab-novo/{ebooks,media,music,photos,roms}
+sudo mkdir -p /mnt/dados-homelab-novo/{ebooks,music,photos,roms}
+sudo mkdir -p /mnt/dados-jellyfin
 ```
+
+O disco dedicado de m�dia deve ser persistido no `/etc/fstab`. Para o disco identificado pelo label `jellyfin-filmes`:
+
+```fstab
+LABEL=jellyfin-filmes /mnt/dados-jellyfin ext4 defaults,nofail 0 2
+```
+
+Depois de executar `sudo mount -a`, crie `/mnt/dados-jellyfin/media` com UID e GID `1000`.
 
 | Serviço | Manifesto | Caminho de mídia |
 | --- | --- | --- |
 | Navidrome | `40-navidrome.yaml` | `/mnt/dados-homelab-novo/music` |
 | Kavita | `60-kavita.yaml` | `/mnt/dados-homelab-novo/ebooks` |
-| Jellyfin | `70-jellyfin.yaml` | `/mnt/dados-homelab-novo/media` |
-| Radarr e Bazarr | `75-radarr-bazarr.yaml` | `/mnt/dados-homelab-novo/media` |
+| Jellyfin | `70-jellyfin.yaml` | `/mnt/dados-jellyfin/media` |
+| Radarr e Bazarr | `75-radarr-bazarr.yaml` | `/mnt/dados-jellyfin/media` |
 | Immich | `90-immich.yaml` | `/mnt/dados-homelab-novo/photos` |
 | RomM | `95-romm.yaml` | caminho configurado no `hostPath` do manifesto |
 
@@ -123,6 +132,7 @@ Instale `kubeseal`, crie os `Secret` necessários com valores novos e sele cada 
 | `immich-db-secrets` | `DB_PASSWORD` |
 | `romm-secrets` | `DB_PASSWD`, `MARIADB_ROOT_PASSWORD`, `ROMM_AUTH_SECRET_KEY` |
 | `romm-screenscraper-secrets` | `SCREENSCRAPER_USER`, `SCREENSCRAPER_PASSWORD` (opcional) |
+| `romm-retroachievements-secrets` | `RETROACHIEVEMENTS_API_KEY` (opcional) |
 | `vikunja-secrets` | `DB_PASSWORD` |
 | `n8n-secrets` | `DB_PASSWORD`, `ENCRYPTION_KEY` |
 
@@ -155,7 +165,7 @@ kubectl create secret generic cloudflare-api-token-secret \
   --namespace cert-manager --from-literal=api-token='COLE_O_TOKEN_AQUI'
 ```
 
-Revise o endereço de e-mail e os domínios em `05-certificates.yaml`. O certificado wildcard é criado nos namespaces `homelab`, `portainer` e `monitoring`.
+Revise o endereço de e-mail e os domínios em `07-certificates.yaml`. O certificado wildcard é criado nos namespaces `homelab`, `portainer` e `monitoring`.
 
 Se ainda não houver DNS interno ou público, adicione temporariamente no cliente:
 
@@ -164,7 +174,7 @@ IP_DO_SERVIDOR nextcloud.feanor.com.br git.feanor.com.br musica.feanor.com.br
 IP_DO_SERVIDOR portainer.feanor.com.br ebooks.feanor.com.br filmes.feanor.com.br
 IP_DO_SERVIDOR radarr.feanor.com.br legendas.feanor.com.br
 IP_DO_SERVIDOR fotos.feanor.com.br jogos.feanor.com.br home.feanor.com.br
-IP_DO_SERVIDOR tarefas.feanor.com.br automacao.feanor.com.br financas.feanor.com.br
+IP_DO_SERVIDOR tarefas.feanor.com.br automacao.feanor.com.br financas.feanor.com.br diario.feanor.com.br
 IP_DO_SERVIDOR grafana.feanor.com.br prometheus.feanor.com.br alertmanager.feanor.com.br
 IP_DO_SERVIDOR argocd.feanor.com.br
 ```
@@ -191,7 +201,9 @@ kubectl get pvc -A
 kubectl logs -n homelab deploy/nextcloud --tail=100
 kubectl logs -n homelab deploy/immich-server --tail=100
 kubectl logs -n homelab deploy/actual-budget --tail=100
+kubectl logs -n homelab deploy/memos --tail=100
 curl -fsS https://financas.feanor.com.br/health
+curl -fsS -o /dev/null https://diario.feanor.com.br/
 ```
 
 ## 7. URLs e primeiro acesso
@@ -212,6 +224,7 @@ curl -fsS https://financas.feanor.com.br/health
 | Vikunja | `https://tarefas.feanor.com.br` |
 | n8n | `https://automacao.feanor.com.br` |
 | Actual Budget | `https://financas.feanor.com.br` |
+| Memos | `https://diario.feanor.com.br` |
 
 O SSH do Gitea usa NodePort:
 
@@ -223,7 +236,7 @@ A configuração operacional do Radarr e do Bazarr está resumida em [Manutenç�
 
 ### Actual Budget
 
-O Actual Budget usa o manifesto `98-actual-budget.yaml`, persiste seus dados no PVC `actual-budget-data` e não requer um banco externo. O Deployment usa a estratégia `Recreate` para impedir que dois pods acessem simultaneamente o mesmo banco SQLite durante atualizações.
+O Actual Budget 26.8.0 usa o manifesto `98-actual-budget.yaml`, persiste seus dados no PVC `actual-budget-data` e não requer um banco externo. A imagem está fixada pelo digest `sha256:ef66469837852d04dd67e70cb069dca71a95e6ab135a905f6568730bf3f71480` para `linux/amd64`. O Deployment usa a estratégia `Recreate` para impedir que dois pods acessem simultaneamente o mesmo banco SQLite durante atualizações. Consulte as [notas da versão 26.8.0](https://actualbudget.org/blog/release-26.8.0) antes de futuras atualizações.
 
 No primeiro acesso a `https://financas.feanor.com.br`:
 
@@ -242,6 +255,22 @@ curl -fsS https://financas.feanor.com.br/health
 
 Uma resposta `{"status":"UP"}` confirma que o servidor está saudável. O script de backup geral inclui esse PVC automaticamente.
 
+### Memos
+
+O Memos usa o manifesto `94-memos.yaml`, SQLite e o PVC `memos-data`. O Deployment mantém uma única réplica com estratégia `Recreate`, evitando que dois processos acessem o mesmo banco durante atualizações. A instância não publica uma URL pública no backend, mantendo desativadas as superfícies públicas de exploração e RSS.
+
+No primeiro acesso a `https://diario.feanor.com.br`, crie a conta administrativa. Em seguida, abra as configurações da instância e desative o cadastro de novos usuários. Não habilite acesso público caso o serviço seja usado como diário pessoal.
+
+Para verificar o serviço:
+
+```bash
+kubectl rollout status deployment/memos -n homelab --timeout=180s
+kubectl get pvc memos-data -n homelab
+curl -fsS -o /dev/null https://diario.feanor.com.br/
+```
+
+O script de backup geral inclui o banco SQLite e os anexos armazenados nesse PVC automaticamente.
+
 ## 8. Monitoramento (opcional)
 
 Use o arquivo atual `homelab-v2-kubernetes/monitoring-values.yaml`. Não grave a senha real do Grafana no Git: crie uma cópia local ignorada, por exemplo `monitoring-values.local.yaml`, e altere nela `grafana.adminPassword`.
@@ -255,6 +284,8 @@ kubectl create namespace monitoring
 helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
   --namespace monitoring -f monitoring-values.local.yaml
 kubectl get pods -n monitoring -w
+kubectl apply -f monitoring-alerts.yaml
+kubectl get prometheusrule -n homelab homelab-pod-alerts
 ```
 
 ## 9. Argo CD (opcional)
@@ -265,7 +296,10 @@ Instale somente depois que a stack manual estiver validada. O arquivo `argocd-va
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 kubectl create namespace argocd
-helm upgrade --install argocd argo/argo-cd -n argocd -f argocd-values.yaml
+helm upgrade --install argocd argo/argo-cd \
+  --version 10.2.2 \
+  --namespace argocd \
+  -f homelab-v2-kubernetes/argocd-values.yaml
 kubectl get pods -n argocd -w
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 -d; echo

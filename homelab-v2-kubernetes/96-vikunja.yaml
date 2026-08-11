@@ -84,7 +84,7 @@ spec:
           command: ["/bin/sh", "-ec", "until pg_isready -h vikunja-db -U vikunja -d vikunja; do sleep 2; done"]
       containers:
         - name: vikunja
-          image: vikunja/vikunja:latest
+          image: vikunja/vikunja@sha256:1a5dd2d410b5359f689c77bbd1c66742cde1993f82d4adfe9aefa400ff1dd833
           imagePullPolicy: IfNotPresent
           env:
             - {name: VIKUNJA_SERVICE_PUBLICURL, value: "https://tarefas.feanor.com.br/"}

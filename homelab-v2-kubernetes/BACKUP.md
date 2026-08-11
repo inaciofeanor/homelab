@@ -8,7 +8,7 @@ recebe o conteúdo dos volumes persistentes.
 ## O que entra no backup
 
 - todos os PVCs `local-path` de todos os namespaces, inclusive bancos, Nextcloud,
-  Gitea, Portainer e monitoramento;
+  Gitea, Memos, Actual Budget, Portainer e monitoramento;
 - recursos e metadados Kubernetes para auditoria;
 - uma cópia do repositório, sem o diretório `.git`;
 - opcionalmente, as bibliotecas `hostPath`: ebooks, mídia, músicas, fotos e ROMs;
@@ -98,7 +98,7 @@ kubectl logs -n homelab deploy/nextcloud --tail=100
 kubectl logs -n homelab deploy/gitea --tail=100
 ```
 
-Depois, acesse Nextcloud, Gitea, Immich, RomM e os demais serviços, confirme os
+Depois, acesse Nextcloud, Gitea, Immich, RomM, Memos e os demais serviços, confirme os
 arquivos e faça um novo backup. Só apague a cópia antiga depois dessa validação.
 
 ## Automação

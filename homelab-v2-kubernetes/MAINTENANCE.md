@@ -44,6 +44,7 @@ Exemplos de health checks:
 ```bash
 curl -fsS https://financas.feanor.com.br/health
 curl -fsS https://tarefas.feanor.com.br/api/v1/info
+curl -fsS -o /dev/null https://diario.feanor.com.br/
 ```
 
 ## Alterar e atualizar a stack
@@ -66,7 +67,7 @@ kubectl rollout restart deployment/DEPLOYMENT -n NAMESPACE
 kubectl rollout status deployment/DEPLOYMENT -n NAMESPACE --timeout=300s
 ```
 
-Antes de atualizar bancos ou aplica√ß√µes que armazenam dados, execute um backup. O Actual Budget usa SQLite e estrat√©gia `Recreate`; n√£o altere para `RollingUpdate`, pois dois pods n√£o devem acessar o mesmo arquivo simultaneamente.
+Antes de atualizar bancos ou aplica√ß√µes que armazenam dados, execute um backup. Actual Budget 26.8.0 e Memos usam SQLite e estrat√©gia `Recreate`; n√£o altere para `RollingUpdate`, pois dois pods n√£o devem acessar o mesmo arquivo simultaneamente. Consulte as notas da vers√£o do Actual Budget antes de atualizar e mantenha a imagem fixada por tag e digest.
 
 ## Backup
 
@@ -90,6 +91,8 @@ Para rotacionar as credenciais gerenciadas pelo script:
 cd ~/git/homelab/homelab-v2-kubernetes/secrets
 ./rotate-secrets.sh
 ```
+
+As credenciais de provedores externos do RomM, como ScreenScraper e RetroAchievements, n√£o s√£o alteradas pelo script. Para rotacion√°-las, gere uma nova credencial no provedor, sele novamente o `Secret` correspondente com `kubeseal` e versione somente o `SealedSecret` criptografado.
 
 O script cria temporariamente `~/.local/state/homelab/credentials.env` com permiss√£o `0600`. Importe os valores em um gerenciador de senhas e remova essa c√≥pia quando n√£o for mais necess√°ria.
 
@@ -141,14 +144,26 @@ Interfaces:
 
 N√£o salve a senha real do Grafana no arquivo versionado. Use uma c√≥pia local ignorada ou um Secret existente no cluster.
 
-## Argo CD
+### Alertas de pods
 
+As regras de pods ficam em monitoring-alerts.yaml e devem ser reaplicadas ap√≥s reinstalar o kube-prometheus-stack:
+
+```bash
+kubectl apply -f homelab-v2-kubernetes/monitoring-alerts.yaml
+kubectl get prometheusrule -n homelab homelab-pod-alerts
+kubectl apply -f homelab-v2-kubernetes/alertmanager-n8n.yaml
+```
+
+O alerta aparece no Prometheus e no Alertmanager. Para receber e-mail, Telegram ou outro canal, configure um receiver e uma rota no Alertmanager; o manifesto n√£o inclui credenciais.
+
+## Argo CD
 O Argo CD √© opcional e usa `argocd-values.yaml`:
 
 ```bash
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 helm upgrade --install argocd argo/argo-cd \
+  --version 10.2.2 \
   --namespace argocd --create-namespace \
   -f homelab-v2-kubernetes/argocd-values.yaml
 kubectl get pods -n argocd
@@ -179,3 +194,91 @@ sudo systemctl restart k3s
 ```
 
 Reiniciar o k3s interrompe todos os servi√ßos do n√≥. Use somente depois de verificar pods, eventos e logs.
+
+
+## IntegraÁ„o de alertas com Telegram via n8n
+
+O Alertmanager envia os alertas de pods para o webhook de produÁ„o do n8n:
+
+~~~text
+https://automacao.feanor.com.br/webhook/alertmanager
+~~~
+
+### Criar o bot e obter o chat_id
+
+1. No Telegram, abra o @BotFather e envie /newbot.
+2. Guarde o token do bot somente nas credenciais do n8n; nunca o comite no Git.
+3. Envie uma mensagem para o bot.
+4. Consulte:
+
+~~~text
+https://api.telegram.org/botTOKEN/getUpdates
+~~~
+
+5. Copie o valor de message.chat.id. Neste ambiente, o chat configurado È 145197342.
+
+### Configurar o workflow no n8n
+
+1. Crie um workflow com um nÛ Webhook.
+2. Configure HTTP Method POST, Path alertmanager, Authentication conforme a proteÁ„o desejada e Respond Immediately.
+3. Ative o workflow e use a URL de produÁ„o, com /webhook/alertmanager. A URL /webhook-test/alertmanager sÛ funciona durante testes.
+4. Conecte a saÌda do Webhook ‡ entrada do nÛ Telegram.
+5. No nÛ Telegram configure Resource Message, Operation Send Message, Chat ID 145197342, a credencial do BotFather e Additional Fields > Parse Mode Markdown.
+6. Use este texto:
+
+~~~text
+5£`Ä©±ï…—ÑÅëºÅç±’Õ—ï»®((©9ΩµîË®ÅÌÏÄë©ÕΩ∏πâΩë‰πÖ±ï…—Õl¡tπ±Öâï±ÃπÖ±ï…—πÖµîÅıÙ(©M—Ö—’ÃË®ÅÌÏÄë©ÕΩ∏πâΩë‰πÖ±ï…—Õl¡tπÕ—Ö—’ÃÅıÙ(©9ÖµïÕ¡ÖçîË®ÅÌÏÄë©ÕΩ∏πâΩë‰πÖ±ï…—Õl¡tπ±Öâï±ÃππÖµïÕ¡ÖçîÅıÙ(©AΩêË®ÅÌÏÄë©ÕΩ∏πâΩë‰πÖ±ï…—Õl¡tπ±Öâï±Ãπ¡ΩêÅıÙ(©IïÕ’µºË®ÅÌÏÄë©ÕΩ∏πâΩë‰πÖ±ï…—Õl¡tπÖππΩ—Ö—•ΩπÃπÕ’µµÖ…‰ÅıÙ(©ïÕç…ßüçºË®ÅÌÏÄë©ÕΩ∏πâΩë‰πÖ±ï…—Õl¡tπÖππΩ—Ö—•ΩπÃπëïÕç…•¡—•Ω∏ÅıÙ)˘˘¯()MîÅºÅ]ïâ°ΩΩ¨Åïπ—…ïùÖ»ÅÖ±ï…—ÃÅë•…ï—Öµïπ—îÅπÑÅ…Ö•Ë∞Å…ïµΩŸÑÄπâΩë‰ÅëÖÃÅï·¡…ïÕœ’ïÃ∏((åååÅQïÕ—Ö»()Ω¥ÅºÅ›Ω…≠ô±Ω‹ÅÖ—•Ÿº∞ÅïπŸ•îÅ’¥Å¡ÖÂ±ΩÖêÅëîÅ—ïÕ—îË()˘˘˘âÖÕ†)ç’…∞Äµ`ÅA=MPÅ°——¡ÃËºΩÖ’—ΩµÖçÖºπôïÖπΩ»πçΩ¥πâ»Ω›ïâ°ΩΩ¨ΩÖ±ï…—µÖπÖùï»ÄÄÄµ ÄâΩπ—ïπ–µQÂ¡îËÅÖ¡¡±•çÖ—•Ω∏Ω©ÕΩ∏àÄÄÄµêÄùÏâÕ—Ö—’ÃàËâô•…•πúà∞âÖ±ï…—ÃàÈmÏâÕ—Ö—’ÃàËâô•…•πúà∞â±Öâï±ÃàÈÏâÖ±ï…—πÖµîàËâQïÕ—ïQï±ïù…Ö¥à∞âπÖµïÕ¡ÖçîàËâ°Ωµï±Öàà∞â¡ΩêàËâ¡Ωêµ—ïÕ—îâÙ∞âÖππΩ—Ö—•ΩπÃàÈÏâÕ’µµÖ…‰àËâ±ï…—ÑÅëîÅ—ïÕ—îà∞âëïÕç…•¡—•Ω∏àËâ5ïπÕÖùï¥ÅëîÅ—ïÕ—îÅëºÅ±ï…—µÖπÖùï»Å¡Ö…ÑÅºÅQï±ïù…Ö¥∏âııuÙú)˘˘¯()Åï·ïç◊üçºÅëïŸîÅµΩÕ—…Ö»ÅΩÃÅªÕÃÅ]ïâ°ΩΩ¨ÅîÅQï±ïù…Ö¥ÅçΩµºÅçΩπç±◊µëΩÃ∞ÅîÅÑÅµïπÕÖùï¥ÅëïŸîÅç°ïùÖ»ÅπºÅç°Ö–ÅçΩπô•ù’…Öëº∏(
+## Integra√ß√£o de alertas com Telegram via n8n
+
+O Alertmanager envia os alertas de pods para o webhook de produ√ß√£o do n8n:
+
+~~~text
+https://automacao.feanor.com.br/webhook/alertmanager
+~~~
+
+### Criar o bot e obter o chat_id
+
+1. No Telegram, abra o @BotFather e envie /newbot.
+2. Guarde o token do bot somente nas credenciais do n8n; nunca o comite no Git.
+3. Envie uma mensagem para o bot.
+4. Consulte:
+
+~~~text
+https://api.telegram.org/botTOKEN/getUpdates
+~~~
+
+5. Copie o valor de message.chat.id. Neste ambiente, o chat configurado √© 145197342.
+
+### Configurar o workflow no n8n
+
+1. Crie um workflow com um n√≥ Webhook.
+2. Configure HTTP Method POST, Path alertmanager, Authentication conforme a prote√ß√£o desejada e Respond Immediately.
+3. Ative o workflow e use a URL de produ√ß√£o, com /webhook/alertmanager. A URL /webhook-test/alertmanager s√≥ funciona durante testes.
+4. Conecte a sa√≠da do Webhook √† entrada do n√≥ Telegram.
+5. No n√≥ Telegram configure Resource Message, Operation Send Message, Chat ID 145197342, a credencial do BotFather e Additional Fields > Parse Mode Markdown.
+6. Use este texto:
+
+~~~text
+üö® *Alerta do cluster*
+
+*Nome:* {{ $json.body.alerts[0].labels.alertname }}
+*Status:* {{ $json.body.alerts[0].status }}
+*Namespace:* {{ $json.body.alerts[0].labels.namespace }}
+*Pod:* {{ $json.body.alerts[0].labels.pod }}
+*Resumo:* {{ $json.body.alerts[0].annotations.summary }}
+*Descri√ß√£o:* {{ $json.body.alerts[0].annotations.description }}
+~~~
+
+Se o Webhook entregar alerts diretamente na raiz, remova .body das express√µes.
+
+### Testar
+
+Com o workflow ativo, envie um payload de teste:
+
+~~~bash
+curl -X POST https://automacao.feanor.com.br/webhook/alertmanager \
+  -H "Content-Type: application/json" \
+  -d '{"status":"firing","alerts":[{"status":"firing","labels":{"alertname":"TesteTelegram","namespace":"homelab","pod":"pod-teste"},"annotations":{"summary":"Alerta de teste","description":"Mensagem de teste do Alertmanager para o Telegram."}}]}'
+~~~
+
+A execu√ß√£o deve mostrar os n√≥s Webhook e Telegram como conclu√≠dos, e a mensagem deve chegar no chat configurado.
