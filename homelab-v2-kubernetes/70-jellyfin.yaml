@@ -65,6 +65,8 @@ spec:
             - name: media
               mountPath: /media
               readOnly: true
+            - name: gpu
+              mountPath: /dev/dri
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -76,6 +78,11 @@ spec:
           hostPath:
             # AJUSTE para o caminho real da sua pasta de filmes/séries no notebook
             path: /mnt/dados-jellyfin/media
+            type: Directory
+        - name: gpu
+          hostPath:
+            # Intel HD Graphics 5500 (i915); disponibiliza VA-API/QSV ao Jellyfin.
+            path: /dev/dri
             type: Directory
 ---
 apiVersion: v1

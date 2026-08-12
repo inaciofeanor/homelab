@@ -161,7 +161,9 @@ spec:
     spec:
       containers:
         - name: machine-learning
-          image: ghcr.io/immich-app/immich-machine-learning:v3.0.3
+          # OpenVINO usa a GPU Intel exposta em /dev/dri. Caso esta GPU Gen8
+          # apresente incompatibilidade, remova o sufixo -openvino para voltar à CPU.
+          image: ghcr.io/immich-app/immich-machine-learning:v3.0.3-openvino
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3003
@@ -174,10 +176,17 @@ spec:
           volumeMounts:
             - name: cache
               mountPath: /cache
+            - name: gpu
+              mountPath: /dev/dri
       volumes:
         - name: cache
           persistentVolumeClaim:
             claimName: immich-ml-cache
+        - name: gpu
+          hostPath:
+            # Intel HD Graphics 5500 (i915), usada pelo backend OpenVINO.
+            path: /dev/dri
+            type: Directory
 ---
 apiVersion: v1
 kind: Service

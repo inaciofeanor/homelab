@@ -16,6 +16,35 @@ Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitora
 - DNS dos domínios `*.feanor.com.br` apontando para o servidor caso HTTPS público seja usado. Para certificados DNS-01, a zona precisa estar no Cloudflare.
 - Acesso administrativo (`sudo`) e Git.
 
+### Aceleração por GPU
+
+Os manifests expõem `/dev/dri` ao Jellyfin e ao serviço de machine learning do
+Immich. No servidor atual, a Intel HD Graphics 5500 usa o driver `i915`; o Immich
+usa a variante OpenVINO de sua imagem. Confirme no nó antes da instalação:
+
+```bash
+test -d /dev/dri && ls -la /dev/dri
+lspci -nnk | grep -EA3 'VGA|Display|3D'
+```
+
+Essa configuração usa `hostPath` e, portanto, pressupõe um cluster de nó único ou
+que os pods sejam fixados em um nó com GPU. Em um cluster com vários nós, use um
+device plugin e afinidade de nó. A Radeon HD 8550M/R5 M230 deste servidor não é
+compatível com versões atuais do ROCm e não deve ser usada pelo Immich.
+
+Depois do rollout, confirme o acesso e o backend do Immich:
+
+```bash
+kubectl exec -n homelab deploy/jellyfin -- ls -la /dev/dri
+kubectl exec -n homelab deploy/immich-machine-learning -- ls -la /dev/dri
+kubectl logs -n homelab deploy/immich-machine-learning --tail=200 | \
+  grep -E 'Available ORT providers|OpenVINOExecutionProvider'
+```
+
+Se a GPU Broadwell não for aceita pelo OpenVINO, remova o sufixo `-openvino` da
+imagem em `90-immich.yaml`; o serviço voltará a processar em CPU sem perder os
+modelos ou resultados já armazenados.
+
 O Immich v3 requer CPU `x86-64-v2` quando o nó é `amd64`. Verifique antes de instalar:
 
 ```bash
