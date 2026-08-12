@@ -142,6 +142,8 @@ spec:
                 name: romm-screenscraper-secrets
             - secretRef:
                 name: romm-retroachievements-secrets
+            - secretRef:
+                name: romm-steamgriddb-secrets
           env:
             - name: DB_HOST
               value: romm-db

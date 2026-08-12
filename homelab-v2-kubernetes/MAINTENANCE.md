@@ -92,7 +92,7 @@ cd ~/git/homelab/homelab-v2-kubernetes/secrets
 ./rotate-secrets.sh
 ```
 
-As credenciais de provedores externos do RomM, como ScreenScraper e RetroAchievements, não são alteradas pelo script. Para rotacioná-las, gere uma nova credencial no provedor, sele novamente o `Secret` correspondente com `kubeseal` e versione somente o `SealedSecret` criptografado.
+As credenciais de provedores externos do RomM, como ScreenScraper, RetroAchievements e SteamGridDB, não são alteradas pelo script. Para rotacioná-las, gere uma nova credencial no provedor, sele novamente o `Secret` correspondente com `kubeseal` e versione somente o `SealedSecret` criptografado. Para o SteamGridDB, use a chave `STEAMGRIDDB_API_KEY` no `Secret` `romm-steamgriddb-secrets`; nunca grave a chave em texto puro nos manifests ou na documenta��o.
 
 O script cria temporariamente `~/.local/state/homelab/credentials.env` com permissão `0600`. Importe os valores em um gerenciador de senhas e remova essa cópia quando não for mais necessária.
 
