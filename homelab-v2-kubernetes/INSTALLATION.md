@@ -18,9 +18,9 @@ Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitora
 
 ### Aceleração por GPU
 
-Os manifests expõem `/dev/dri` ao Jellyfin e ao serviço de machine learning do
-Immich. No servidor atual, a Intel HD Graphics 5500 usa o driver `i915`; o Immich
-usa a variante OpenVINO de sua imagem. Confirme no nó antes da instalação:
+O manifesto expõe `/dev/dri` ao Jellyfin para transcodificação VA-API/QSV. No
+servidor atual, a Intel HD Graphics 5500 usa o driver `i915`. Confirme no nó antes
+da instalação:
 
 ```bash
 test -d /dev/dri && ls -la /dev/dri
@@ -30,20 +30,18 @@ lspci -nnk | grep -EA3 'VGA|Display|3D'
 Essa configuração usa `hostPath` e, portanto, pressupõe um cluster de nó único ou
 que os pods sejam fixados em um nó com GPU. Em um cluster com vários nós, use um
 device plugin e afinidade de nó. A Radeon HD 8550M/R5 M230 deste servidor não é
-compatível com versões atuais do ROCm e não deve ser usada pelo Immich.
+compatível com versões atuais do ROCm.
 
-Depois do rollout, confirme o acesso e o backend do Immich:
+A imagem OpenVINO do Immich v3.0.3 foi testada neste host, mas retornou somente o
+dispositivo `CPU`: a Intel Broadwell Gen8 não é suportada pelo runtime atual. Por
+isso, o `immich-machine-learning` permanece na imagem CPU. Não monte `/dev/dri`
+nesse pod até que o servidor receba uma GPU suportada pelo OpenVINO, CUDA ou ROCm.
+
+Depois do rollout, confirme o acesso do Jellyfin:
 
 ```bash
 kubectl exec -n homelab deploy/jellyfin -- ls -la /dev/dri
-kubectl exec -n homelab deploy/immich-machine-learning -- ls -la /dev/dri
-kubectl logs -n homelab deploy/immich-machine-learning --tail=200 | \
-  grep -E 'Available ORT providers|OpenVINOExecutionProvider'
 ```
-
-Se a GPU Broadwell não for aceita pelo OpenVINO, remova o sufixo `-openvino` da
-imagem em `90-immich.yaml`; o serviço voltará a processar em CPU sem perder os
-modelos ou resultados já armazenados.
 
 O Immich v3 requer CPU `x86-64-v2` quando o nó é `amd64`. Verifique antes de instalar:
 
