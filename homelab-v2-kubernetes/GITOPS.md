@@ -22,8 +22,8 @@ chave privada nunca deve ser adicionada ao Git.
 Depois de configurar o acesso ao repositorio, aplique o bootstrap:
 
 ```bash
-kubectl apply -f homelab-v2-kubernetes/08-argocd-certificate.yaml
-kubectl apply -f homelab-v2-kubernetes/99-argocd-application.yaml
+kubectl apply -f homelab-v2-kubernetes/210-argocd-certificate.yaml
+kubectl apply -f homelab-v2-kubernetes/900-argocd-application.yaml
 ```
 
 ## Fluxo de alteracoes
@@ -33,7 +33,7 @@ kubectl apply -f homelab-v2-kubernetes/99-argocd-application.yaml
 3. O Argo CD sincroniza automaticamente, remove recursos apagados do Git e
    corrige alteracoes manuais no cluster.
 4. Promova para `main` somente depois da validacao. Para usar `main`, altere
-   `spec.source.targetRevision` em `99-argocd-application.yaml`.
+   `spec.source.targetRevision` em `900-argocd-application.yaml`.
 
 Validacoes antes do push:
 
@@ -68,5 +68,5 @@ kubectl delete secret argocd-initial-admin-secret -n argocd
 ## Recuperacao
 
 O Argo CD pode ser reinstalado pelo comando Helm de bootstrap. Depois, restaure
-o Secret de acesso ao repositorio e aplique `99-argocd-application.yaml`. Os
+o Secret de acesso ao repositorio e aplique `900-argocd-application.yaml`. Os
 PVCs dos aplicativos nao sao recriados durante a adocao GitOps.

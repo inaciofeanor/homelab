@@ -19,4 +19,19 @@ kubectl apply -k .
 kubectl get pods -A
 ```
 
+## Numeração dos manifests
+
+Os arquivos usam três dígitos e intervalos de 10 para permitir inserções sem
+renumerar toda a sequência:
+
+- `000–099`: recursos base;
+- `100–199`: secrets;
+- `200–299`: certificados;
+- `300–899`: serviços, aplicações e tarefas operacionais;
+- `900–999`: bootstrap e recursos GitOps.
+
+Ao adicionar um manifesto entre dois existentes, use um número livre no
+intervalo (por exemplo, `305` entre `300` e `310`) e inclua-o em
+`kustomization.yaml`.
+
 Os arquivos em `homelab-v1-docker-compose` pertencem à primeira versão do ambiente e não fazem parte da instalação atual.

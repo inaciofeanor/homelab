@@ -2,35 +2,35 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   # Base e segredos
-  - 00-namespace.yaml
-  - 02-sealed-secrets.yaml
-  - 03-romm-screenscraper-sealed-secret.yaml
-  - 04-romm-retroachievements-sealed-secret.yaml
-  - 05-romm-steamgriddb-sealed-secret.yaml
-  - 05-vikunja-sealed-secret.yaml
-  - 06-n8n-sealed-secret.yaml
+  - 000-namespace.yaml
+  - 100-sealed-secrets.yaml
+  - 110-romm-screenscraper-sealed-secret.yaml
+  - 120-romm-retroachievements-sealed-secret.yaml
+  - 130-romm-steamgriddb-sealed-secret.yaml
+  - 140-vikunja-sealed-secret.yaml
+  - 150-n8n-sealed-secret.yaml
 
   # Certificados
-  - 07-certificates.yaml
-  - 08-argocd-certificate.yaml
+  - 200-certificates.yaml
+  - 210-argocd-certificate.yaml
 
   # Serviços e aplicações
-  - 10-portainer.yaml
-  - 20-nextcloud.yaml
-  - 30-gitea.yaml
-  - 40-navidrome.yaml
-  - 50-ingress.yaml
-  - 60-kavita.yaml
-  - 70-jellyfin.yaml
-  - 75-radarr-bazarr.yaml
-  - 80-homepage.yaml
-  - 85-pod-cleanup-cronjob.yaml
-  - 90-immich.yaml
-  - 94-memos.yaml
-  - 95-romm.yaml
-  - 96-vikunja.yaml
-  - 97-n8n.yaml
-  - 98-actual-budget.yaml
+  - 300-portainer.yaml
+  - 310-nextcloud.yaml
+  - 320-gitea.yaml
+  - 330-navidrome.yaml
+  - 340-ingress.yaml
+  - 350-kavita.yaml
+  - 360-jellyfin.yaml
+  - 370-radarr-bazarr.yaml
+  - 380-homepage.yaml
+  - 390-pod-cleanup-cronjob.yaml
+  - 400-immich.yaml
+  - 410-memos.yaml
+  - 420-romm.yaml
+  - 430-vikunja.yaml
+  - 440-n8n.yaml
+  - 450-actual-budget.yaml
 
   # GitOps
-  - 99-argocd-application.yaml
+  - 900-argocd-application.yaml
