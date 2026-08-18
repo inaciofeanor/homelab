@@ -31,7 +31,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: postgres
-          image: postgres:17-alpine
+          image: postgres:17.11-alpine@sha256:7456ef82e5f5bc43d997f4781bbd7c0d6389bff397564649a356e206ba473aee
           imagePullPolicy: IfNotPresent
           env:
             - {name: POSTGRES_DB, value: n8n}
@@ -80,7 +80,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       initContainers:
         - name: wait-for-database
-          image: postgres:17-alpine
+          image: postgres:17.11-alpine@sha256:7456ef82e5f5bc43d997f4781bbd7c0d6389bff397564649a356e206ba473aee
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-ec", "until pg_isready -h n8n-db -U n8n -d n8n; do sleep 2; done"]
       containers:
