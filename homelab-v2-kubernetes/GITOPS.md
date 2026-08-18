@@ -1,7 +1,7 @@
 # GitOps com Argo CD
 
-O Argo CD e instalado pelo Helm chart `argo/argo-cd` fixado na versao `10.2.2`
-(Argo CD `v3.4.6`). Os workloads declarados neste diretorio sao controlados
+O Argo CD e instalado pelo Helm chart `argo/argo-cd` fixado na versao `10.4.0`
+(Argo CD `v3.5.1`). Os workloads declarados neste diretorio sao controlados
 pela `Application` `homelab`, que acompanha a branch `dev`.
 
 ## Bootstrap do Argo CD
@@ -10,7 +10,7 @@ pela `Application` `homelab`, que acompanha a branch `dev`.
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 helm upgrade --install argocd argo/argo-cd \
-  --version 10.2.2 \
+  --version 10.4.0 \
   --namespace argocd --create-namespace \
   -f homelab-v2-kubernetes/argocd-values.yaml
 ```

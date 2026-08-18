@@ -117,7 +117,8 @@ helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
 helm repo update
 
 helm upgrade --install cert-manager jetstack/cert-manager \
-  --namespace cert-manager --create-namespace --set crds.enabled=true
+  --namespace cert-manager --create-namespace --version v1.21.1 \
+  --set crds.enabled=true
 ```
 
 Espere o cert-manager ficar pronto:
@@ -310,7 +311,8 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 kubectl create namespace monitoring
 helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
-  --namespace monitoring -f monitoring-values.local.yaml
+  --namespace monitoring --version 88.3.0 \
+  -f monitoring-values.local.yaml
 kubectl get pods -n monitoring -w
 kubectl apply -f monitoring-alerts.yaml
 kubectl get prometheusrule -n homelab homelab-pod-alerts
@@ -325,7 +327,7 @@ helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 kubectl create namespace argocd
 helm upgrade --install argocd argo/argo-cd \
-  --version 10.2.2 \
+  --version 10.4.0 \
   --namespace argocd \
   -f homelab-v2-kubernetes/argocd-values.yaml
 kubectl get pods -n argocd -w

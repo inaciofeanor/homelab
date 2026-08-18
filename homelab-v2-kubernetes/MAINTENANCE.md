@@ -130,6 +130,7 @@ helm repo update
 helm upgrade --install kube-prometheus-stack \
   prometheus-community/kube-prometheus-stack \
   --namespace monitoring --create-namespace \
+  --version 88.3.0 \
   -f homelab-v2-kubernetes/monitoring-values.yaml
 
 helm status kube-prometheus-stack -n monitoring
@@ -163,7 +164,7 @@ O Argo CD é opcional e usa `argocd-values.yaml`:
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 helm upgrade --install argocd argo/argo-cd \
-  --version 10.2.2 \
+  --version 10.4.0 \
   --namespace argocd --create-namespace \
   -f homelab-v2-kubernetes/argocd-values.yaml
 kubectl get pods -n argocd
