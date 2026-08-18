@@ -102,7 +102,7 @@ spec:
             - {name: N8N_PROTOCOL, value: https}
             - {name: N8N_PORT, value: "5678"}
             - {name: N8N_EDITOR_BASE_URL, value: "https://automacao.feanor.com.br/"}
-            - {name: WEBHOOK_URL, value: "https://automacao.feanor.com.br/"}
+            - {name: N8N_WEBHOOK_URL, value: "https://automacao.feanor.com.br/"}
             - {name: N8N_PROXY_HOPS, value: "1"}
             - {name: GENERIC_TIMEZONE, value: America/Sao_Paulo}
             - {name: TZ, value: America/Sao_Paulo}
