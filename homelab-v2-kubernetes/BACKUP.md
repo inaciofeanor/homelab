@@ -110,6 +110,21 @@ cron semanal, domingo às 03:00:
 0 3 * * 0 /home/SEU_USUARIO/git/homelab/homelab-v2-kubernetes/backup/backup.sh /mnt/backup-homelab >> /var/log/homelab-backup.log 2>&1
 ```
 
+### Backup diário do RomM no WSL
+
+O script `tools/backup-romm-to-google-drive.sh` cria um dump transacional do
+MariaDB e arquiva `resources`, `assets` e `config`. A biblioteca de ROMs não é
+incluída. Os arquivos são gravados em `Google Drive/Backups/RomM`, recebem
+checksum SHA-256 e têm retenção de 14 dias.
+
+No crontab do usuário do WSL, execute-o depois do backup de Memos/Actual:
+
+```cron
+CRON_TZ=America/Sao_Paulo
+0 14 * * * /home/SEU_USUARIO/git/homelab/tools/backup-romm-to-google-drive.sh >> "/mnt/d/Google Drive/Backups/cron-romm.log" 2>&1
+```
+
+O WSL precisa estar ativo no horário; o cron comum não recupera execuções perdidas.
 O cron de root não precisa de `sudo`. Monitore o arquivo de log e o espaço livre;
 este script deliberadamente não remove backups antigos automaticamente.
 
