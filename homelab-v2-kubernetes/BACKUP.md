@@ -125,6 +125,22 @@ CRON_TZ=America/Sao_Paulo
 ```
 
 O WSL precisa estar ativo no horário; o cron comum não recupera execuções perdidas.
+
+### Backup diário do Vikunja no WSL
+
+O script `tools/backup-vikunja-to-google-drive.sh` usa o comando nativo
+`vikunja dump`, que exporta banco, configuração e anexos em um ZIP restaurável.
+Os arquivos são gravados em `Google Drive/Backups/Vikunja`, recebem checksum
+SHA-256 e têm retenção de 14 dias.
+
+Agende depois dos backups de Memos/Actual e RomM:
+
+```cron
+CRON_TZ=America/Sao_Paulo
+0 15 * * * /home/SEU_USUARIO/git/homelab/tools/backup-vikunja-to-google-drive.sh >> "/mnt/d/Google Drive/Backups/cron-vikunja.log" 2>&1
+```
+
+O ZIP contém dados sensíveis, inclusive a configuração de conexão com o banco.
 O cron de root não precisa de `sudo`. Monitore o arquivo de log e o espaço livre;
 este script deliberadamente não remove backups antigos automaticamente.
 
