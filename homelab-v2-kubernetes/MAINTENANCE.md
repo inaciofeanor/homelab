@@ -80,6 +80,20 @@ sudo ./backup.sh --include-hostpaths /mnt/backup-homelab
 ```
 
 O procedimento para testar e restaurar cópias está em [BACKUP.md](BACKUP.md).
+## Letras no Navidrome
+
+O plugin comunitário `nd-lyrics` v7.2.0 fica em `/data/plugins/nd-lyrics.ndp`
+no PVC `navidrome-data`. O SHA-256 esperado é
+`a9196e5b4e2c2eb2aaccb9f35c9faf6f488fe9081ff5685b1556901686c7540f`.
+Ele usa LRCLIB e lyrics.ovh, procura a melhor sincronização e grava letras ao
+lado das músicas sem sobrescrever arquivos existentes.
+
+```bash
+kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin validate nd-lyrics
+kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin list -f json
+```
+
+O volume `/music` é gravável. O plugin só busca uma letra quando um cliente a solicita.
 
 ## Secrets
 
