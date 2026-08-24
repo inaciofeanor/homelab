@@ -14,6 +14,11 @@ recebe o conteúdo dos volumes persistentes.
 - opcionalmente, as bibliotecas `hostPath`: ebooks, mídia, músicas, fotos e ROMs;
 - checksums SHA-256 de todos os arquivos.
 
+O plugin `nd-lyrics` e suas configurações ficam no PVC `navidrome-data` e entram
+no backup normal de PVCs. As letras geradas ficam ao lado das músicas no
+`hostPath`; elas só entram no backup geral quando `--include-hostpaths` é usado
+ou quando a biblioteca musical é copiada por outro processo.
+
 O backup contém senhas e outros dados privados. Guarde-o em disco criptografado e
 mantenha pelo menos uma segunda cópia desconectada ou fora de casa. Um backup no
 mesmo disco do servidor não protege contra falha física, roubo ou ransomware.

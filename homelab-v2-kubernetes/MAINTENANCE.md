@@ -80,6 +80,7 @@ sudo ./backup.sh --include-hostpaths /mnt/backup-homelab
 ```
 
 O procedimento para testar e restaurar cópias está em [BACKUP.md](BACKUP.md).
+
 ## Letras no Navidrome
 
 O plugin comunitário `nd-lyrics` v7.2.0 fica em `/data/plugins/nd-lyrics.ndp`
@@ -93,7 +94,10 @@ kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin validate nd-ly
 kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin list -f json
 ```
 
-O volume `/music` é gravável. O plugin só busca uma letra quando um cliente a solicita.
+O volume `/music` é gravável. O plugin só busca uma letra quando um cliente a
+solicita. A WebUI não consulta diretamente o provedor: use um cliente
+OpenSubsonic compatível para a primeira solicitação; depois o arquivo lateral
+será indexado e ficará disponível como letra local.
 
 ## Secrets
 

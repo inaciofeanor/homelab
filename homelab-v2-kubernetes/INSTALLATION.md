@@ -87,6 +87,10 @@ Depois de executar `sudo mount -a`, crie `/mnt/dados-jellyfin/media` com UID e G
 
 `hostPath` prende o pod ao nó local. Não use essa configuração em um cluster com vários nós sem substituir o armazenamento por volumes compartilhados.
 
+O Navidrome grava arquivos laterais de letras em `music`; por isso esse caminho
+precisa permitir escrita pelo usuário do contêiner. Kavita, Jellyfin, Radarr e
+Bazarr continuam usando seus mounts conforme indicado nos próprios manifestos.
+
 ## 2. Instalar k3s e configurar kubectl
 
 ```bash
@@ -234,6 +238,23 @@ kubectl logs -n homelab deploy/memos --tail=100
 curl -fsS https://financas.feanor.com.br/health
 curl -fsS -o /dev/null https://diario.feanor.com.br/
 ```
+
+### Plugin de letras do Navidrome
+
+O plugin comunitário `nd-lyrics` v7.2.0 deve existir em
+`/data/plugins/nd-lyrics.ndp`, dentro do PVC `navidrome-data`. Confira o pacote
+antes de habilitá-lo:
+
+```bash
+echo 'a9196e5b4e2c2eb2aaccb9f35c9faf6f488fe9081ff5685b1556901686c7540f  nd-lyrics.ndp' | sha256sum -c -
+kubectl cp nd-lyrics.ndp homelab/$(kubectl get pod -n homelab -l app=navidrome -o jsonpath='{.items[0].metadata.name}'):/data/plugins/nd-lyrics.ndp
+kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin rescan
+kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin validate nd-lyrics
+```
+
+Habilite o plugin para todos os usuários e bibliotecas, conceda acesso de
+escrita e mantenha `overwriteLyrics=false`. O manifesto configura a prioridade
+de letras e monta `/music` para escrita.
 
 ## 7. URLs e primeiro acesso
 
