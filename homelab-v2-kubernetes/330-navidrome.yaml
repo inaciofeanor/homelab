@@ -39,6 +39,14 @@ spec:
               value: info
             - name: ND_SESSIONTIMEOUT
               value: "24h"
+            - name: ND_PLUGINS_ENABLED
+              value: "true"
+            - name: ND_PLUGINS_AUTORELOAD
+              value: "true"
+            - name: ND_PLUGINS_FOLDER
+              value: /data/plugins
+            - name: ND_LYRICSPRIORITY
+              value: ".ttml,.yaml,.yml,.elrc,.lrc,.srt,.txt,embedded,nd-lyrics"
           ports:
             - containerPort: 4533
           resources:
@@ -63,7 +71,7 @@ spec:
               mountPath: /data
             - name: music
               mountPath: /music
-              readOnly: true
+              readOnly: false
       volumes:
         - name: data
           persistentVolumeClaim:
