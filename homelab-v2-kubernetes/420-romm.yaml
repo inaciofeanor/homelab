@@ -177,6 +177,21 @@ spec:
               memory: 1Gi
           ports:
             - containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8080
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+            successThreshold: 1
           volumeMounts:
             - name: library
               mountPath: /romm/library
