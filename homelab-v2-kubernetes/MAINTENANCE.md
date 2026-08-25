@@ -69,6 +69,26 @@ kubectl rollout status deployment/DEPLOYMENT -n NAMESPACE --timeout=300s
 
 Antes de atualizar bancos ou aplicações que armazenam dados, execute um backup. Actual Budget 26.8.0 e Memos usam SQLite e estratégia `Recreate`; não altere para `RollingUpdate`, pois dois pods não devem acessar o mesmo arquivo simultaneamente. Consulte as notas da versão do Actual Budget antes de atualizar e mantenha a imagem fixada por tag e digest.
 
+### Atualizar o RomM
+
+O RomM está fixado na versão 5.2.0 e executa as migrações do MariaDB ao
+iniciar. Antes de trocar a imagem, execute o backup descrito em [BACKUP.md](BACKUP.md).
+Depois que o Argo CD sincronizar a alteração, valide o rollout, a versão e os
+logs de migração:
+
+```bash
+kubectl rollout status deployment/romm -n homelab --timeout=600s
+kubectl get deployment/romm -n homelab \
+  -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+kubectl logs -n homelab deployment/romm --since=15m
+curl -fsS -o /dev/null https://jogos.feanor.com.br/
+```
+
+Se a aplicação não ficar pronta, preserve o banco e os PVCs, consulte os logs
+e reverta o commit no Git. Se a migração tiver alterado o banco de forma
+incompatível, restaure em conjunto o dump do MariaDB e os volumes auxiliares do
+backup criado antes da atualização; não restaure apenas um deles.
+
 ## Backup
 
 Execute semanalmente e antes de atualizações relevantes:

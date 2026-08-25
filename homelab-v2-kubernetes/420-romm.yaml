@@ -135,7 +135,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: romm
-          image: rommapp/romm:5.1.0@sha256:341a3cd70ae482912948e159121a4dbc0ab83784e97bf964a2bde7fc529d0e15
+          image: rommapp/romm:5.2.0@sha256:3512f2ca455782f90247271bed23116e6bc675bc74e379be2c41696e607ab11e
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
