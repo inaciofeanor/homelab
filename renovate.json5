@@ -1,0 +1,46 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:pinDigests"
+  ],
+  "baseBranchPatterns": ["dev"],
+  "kubernetes": {
+    "managerFilePatterns": ["/^homelab-v2-kubernetes/.+\\.ya?ml$/"]
+  },
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Atualizações disponíveis",
+  "labels": ["dependencies"],
+  "automerge": false,
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "packageRules": [
+    {
+      "description": "Aguardar três dias antes de propor imagens recém-publicadas",
+      "matchDatasources": ["docker"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Exigir aprovação no dashboard para atualizações major",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Identificar claramente atualizações de imagens",
+      "matchDatasources": ["docker"],
+      "addLabels": ["container-image"]
+    },
+    {
+      "description": "Agrupar apenas atualizações das actions do próprio workflow",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  }
+}
