@@ -6,7 +6,7 @@ Stack de nó único baseada em k3s e Traefik. Os manifests em `homelab-v2-kubern
 
 - [Instalação](INSTALLATION.md): preparação de uma máquina nova, k3s, controllers, secrets, certificados, DNS e implantação da stack.
 - [Manutenção](MAINTENANCE.md): verificações diárias, atualização, diagnóstico, monitoramento, certificados, rotação de secrets e Argo CD.
-- [GitOps com Argo CD](GITOPS.md): bootstrap, acesso ao repositorio, sincronizacao automatica e recuperacao.
+- [GitOps com Argo CD](GITOPS.md): bootstrap, sincronização automática, PRs de atualização do Renovate e recuperação.
 - [Backup e restauração](BACKUP.md): cópia fria dos PVCs, bibliotecas em `hostPath` e recuperação em outra máquina.
 
 ## Aplicar alterações
@@ -18,6 +18,13 @@ kubectl apply --dry-run=client -k .
 kubectl apply -k .
 kubectl get pods -A
 ```
+
+As imagens e Actions são verificadas diariamente pelo Renovate. As propostas
+aparecem como pull requests contra `dev`, sem automerge; atualizações major
+precisam ser liberadas na issue **Atualizações disponíveis**. O Renovate não
+altera o cluster diretamente: depois do merge, o Argo CD aplica a mudança e o
+serviço deve ser validado antes da promoção para `main`. Consulte
+[GitOps com Argo CD](GITOPS.md#atualizações-de-imagens-com-renovate).
 
 ## Numeração dos manifests
 
