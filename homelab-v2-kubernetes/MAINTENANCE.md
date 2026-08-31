@@ -97,7 +97,7 @@ registries, atualiza tags e digests nos manifests e abre pull requests contra
 `dev`; não altera o cluster diretamente e nunca faz merge automático.
 
 A autenticação usa o `GITHUB_TOKEN` efêmero do próprio job, limitado a Contents,
-Issues e Pull requests. A opção **Allow GitHub Actions to create and approve pull
+Issues, Pull requests e Commit statuses. A opção **Allow GitHub Actions to create and approve pull
 requests** precisa permanecer habilitada no repositório. Não substitua esse
 token por uma credencial pessoal gravada nos manifests.
 
