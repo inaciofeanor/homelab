@@ -69,6 +69,28 @@ kubectl rollout status deployment/DEPLOYMENT -n NAMESPACE --timeout=300s
 
 Antes de atualizar bancos ou aplicações que armazenam dados, execute um backup. Actual Budget 26.8.0 e Memos usam SQLite e estratégia `Recreate`; não altere para `RollingUpdate`, pois dois pods não devem acessar o mesmo arquivo simultaneamente. Consulte as notas da versão do Actual Budget antes de atualizar e mantenha a imagem fixada por tag e digest.
 
+## Atualizações automáticas de imagens
+
+O workflow `.github/workflows/renovate.yml` executa o Renovate diariamente às
+07:17 no horário de Brasília e também aceita execução manual. Ele consulta os
+registries, atualiza tags e digests nos manifests e abre pull requests contra
+`dev`; não altera o cluster diretamente e nunca faz merge automático.
+
+A autenticação usa o `GITHUB_TOKEN` efêmero do próprio job, limitado a Contents,
+Issues e Pull requests. A opção **Allow GitHub Actions to create and approve pull
+requests** precisa permanecer habilitada no repositório. Não substitua esse
+token por uma credencial pessoal gravada nos manifests.
+
+As regras ficam em `renovate.json5`. Atualizações major aparecem primeiro na
+issue **Atualizações disponíveis** e só geram PR depois de aprovadas nessa
+issue. As demais respeitam uma espera mínima de três dias após a publicação.
+Depois do merge em `dev`, valide o serviço e promova a mudança para `main` pelo
+fluxo normal do repositório.
+
+Como workflows agendados só são executados a partir da branch padrão, esses
+arquivos precisam existir em `main`, embora os PRs de dependências tenham
+`dev` como branch base.
+
 ## Backup
 
 Execute semanalmente e antes de atualizações relevantes:
