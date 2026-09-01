@@ -4,7 +4,7 @@ services:
   # Portainer — painel web para gerenciar os containers
   # ──────────────────────────────────────────────
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce:latest@sha256:511f3f06c96fe3b993ebeaafde311c1959cae73a7ef825dba6397d51b450dffa
     container_name: portainer
     restart: unless-stopped
     ports:
@@ -19,7 +19,7 @@ services:
   # Nextcloud — nuvem pessoal (arquivos, calendário, contatos)
   # ──────────────────────────────────────────────
   nextcloud_db:
-    image: mariadb:11
+    image: mariadb:11@sha256:2439dcd7d14010ecd1ff7a4e1c5abe8e208c34fe35290744deeeaac3569043c3
     container_name: nextcloud_db
     restart: unless-stopped
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
@@ -34,14 +34,14 @@ services:
       - homelab
 
   nextcloud_redis:
-    image: redis:alpine
+    image: redis:alpine@sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576
     container_name: nextcloud_redis
     restart: unless-stopped
     networks:
       - homelab
 
   nextcloud:
-    image: nextcloud:latest
+    image: nextcloud:latest@sha256:0b8261f6335af6b95264ce893b4d645857638e0fa151b5ba620f25f377318ae1
     container_name: nextcloud
     restart: unless-stopped
     ports:
@@ -67,7 +67,7 @@ services:
   # Gitea — servidor Git leve (alternativa ao GitHub/GitLab)
   # ──────────────────────────────────────────────
   gitea:
-    image: gitea/gitea:latest
+    image: gitea/gitea:latest@sha256:87a67ee09d3ae0d1df5fda5dcda3e2a1f9236a45b0a59025d6e00e46adc43bef
     container_name: gitea
     restart: unless-stopped
     environment:
@@ -86,7 +86,7 @@ services:
   # Navidrome — servidor de música (compatível com Subsonic, apps como Symfonium/play:Sub)
   # ──────────────────────────────────────────────
   navidrome:
-    image: deluan/navidrome:latest
+    image: deluan/navidrome:latest@sha256:9012939114fbb1bb641b81cf96dec5ded15f0aafefe8d47a511d7cb919658e40
     container_name: navidrome
     restart: unless-stopped
     ports:
