@@ -14,6 +14,11 @@ recebe o conteúdo dos volumes persistentes.
 - opcionalmente, as bibliotecas `hostPath`: ebooks, mídia, músicas, fotos e ROMs;
 - checksums SHA-256 de todos os arquivos.
 
+O plugin `nd-lyrics` e suas configurações ficam no PVC `navidrome-data` e entram
+no backup normal de PVCs. As letras geradas ficam ao lado das músicas no
+`hostPath`; elas só entram no backup geral quando `--include-hostpaths` é usado
+ou quando a biblioteca musical é copiada por outro processo.
+
 O backup contém senhas e outros dados privados. Guarde-o em disco criptografado e
 mantenha pelo menos uma segunda cópia desconectada ou fora de casa. Um backup no
 mesmo disco do servidor não protege contra falha física, roubo ou ransomware.
@@ -110,6 +115,37 @@ cron semanal, domingo às 03:00:
 0 3 * * 0 /home/SEU_USUARIO/git/homelab/homelab-v2-kubernetes/backup/backup.sh /mnt/backup-homelab >> /var/log/homelab-backup.log 2>&1
 ```
 
+### Backup diário do RomM no WSL
+
+O script `tools/backup-romm-to-google-drive.sh` cria um dump transacional do
+MariaDB e arquiva `resources`, `assets` e `config`. A biblioteca de ROMs não é
+incluída. Os arquivos são gravados em `Google Drive/Backups/RomM`, recebem
+checksum SHA-256 e têm retenção de 14 dias.
+
+No crontab do usuário do WSL, execute-o depois do backup de Memos/Actual:
+
+```cron
+CRON_TZ=America/Sao_Paulo
+0 14 * * * /home/SEU_USUARIO/git/homelab/tools/backup-romm-to-google-drive.sh >> "/mnt/d/Google Drive/Backups/cron-romm.log" 2>&1
+```
+
+O WSL precisa estar ativo no horário; o cron comum não recupera execuções perdidas.
+
+### Backup diário do Vikunja no WSL
+
+O script `tools/backup-vikunja-to-google-drive.sh` usa o comando nativo
+`vikunja dump`, que exporta banco, configuração e anexos em um ZIP restaurável.
+Os arquivos são gravados em `Google Drive/Backups/Vikunja`, recebem checksum
+SHA-256 e têm retenção de 14 dias.
+
+Agende depois dos backups de Memos/Actual e RomM:
+
+```cron
+CRON_TZ=America/Sao_Paulo
+0 15 * * * /home/SEU_USUARIO/git/homelab/tools/backup-vikunja-to-google-drive.sh >> "/mnt/d/Google Drive/Backups/cron-vikunja.log" 2>&1
+```
+
+O ZIP contém dados sensíveis, inclusive a configuração de conexão com o banco.
 O cron de root não precisa de `sudo`. Monitore o arquivo de log e o espaço livre;
 este script deliberadamente não remove backups antigos automaticamente.
 

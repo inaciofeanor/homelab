@@ -1,4 +1,4 @@
-# Helm chart: argo/argo-cd 10.2.2 (Argo CD v3.4.6)
+# Helm chart: argo/argo-cd 10.4.0 (Argo CD v3.5.1)
 # Perfil enxuto para o cluster k3s de no unico.
 
 global:

@@ -176,7 +176,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: homepage
-          image: ghcr.io/gethomepage/homepage@sha256:a0b71c8e757298d02560186bab9fbe3fc2d375c523a62cc1019177b37e48aa28
+          image: ghcr.io/gethomepage/homepage:v2.0.0@sha256:dcc34ecb84406fbb2bc91c4b22e400fcbf43eae60a14b91329327ae781ca0873
           imagePullPolicy: IfNotPresent
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS

@@ -16,6 +16,33 @@ Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitora
 - DNS dos domínios `*.feanor.com.br` apontando para o servidor caso HTTPS público seja usado. Para certificados DNS-01, a zona precisa estar no Cloudflare.
 - Acesso administrativo (`sudo`) e Git.
 
+### Aceleração por GPU
+
+O manifesto expõe `/dev/dri` ao Jellyfin para transcodificação VA-API/QSV. No
+servidor atual, a Intel HD Graphics 5500 usa o driver `i915`. Confirme no nó antes
+da instalação:
+
+```bash
+test -d /dev/dri && ls -la /dev/dri
+lspci -nnk | grep -EA3 'VGA|Display|3D'
+```
+
+Essa configuração usa `hostPath` e, portanto, pressupõe um cluster de nó único ou
+que os pods sejam fixados em um nó com GPU. Em um cluster com vários nós, use um
+device plugin e afinidade de nó. A Radeon HD 8550M/R5 M230 deste servidor não é
+compatível com versões atuais do ROCm.
+
+A imagem OpenVINO do Immich v3.0.3 foi testada neste host, mas retornou somente o
+dispositivo `CPU`: a Intel Broadwell Gen8 não é suportada pelo runtime atual. Por
+isso, o `immich-machine-learning` permanece na imagem CPU. Não monte `/dev/dri`
+nesse pod até que o servidor receba uma GPU suportada pelo OpenVINO, CUDA ou ROCm.
+
+Depois do rollout, confirme o acesso do Jellyfin:
+
+```bash
+kubectl exec -n homelab deploy/jellyfin -- ls -la /dev/dri
+```
+
 O Immich v3 requer CPU `x86-64-v2` quando o nó é `amd64`. Verifique antes de instalar:
 
 ```bash
@@ -51,14 +78,18 @@ Depois de executar `sudo mount -a`, crie `/mnt/dados-jellyfin/media` com UID e G
 
 | Serviço | Manifesto | Caminho de mídia |
 | --- | --- | --- |
-| Navidrome | `40-navidrome.yaml` | `/mnt/dados-homelab-novo/music` |
-| Kavita | `60-kavita.yaml` | `/mnt/dados-homelab-novo/ebooks` |
-| Jellyfin | `70-jellyfin.yaml` | `/mnt/dados-jellyfin/media` |
-| Radarr e Bazarr | `75-radarr-bazarr.yaml` | `/mnt/dados-jellyfin/media` |
-| Immich | `90-immich.yaml` | `/mnt/dados-homelab-novo/photos` |
-| RomM | `95-romm.yaml` | caminho configurado no `hostPath` do manifesto |
+| Navidrome | `330-navidrome.yaml` | `/mnt/dados-homelab-novo/music` |
+| Kavita | `350-kavita.yaml` | `/mnt/dados-homelab-novo/ebooks` |
+| Jellyfin | `360-jellyfin.yaml` | `/mnt/dados-jellyfin/media` |
+| Radarr e Bazarr | `370-radarr-bazarr.yaml` | `/mnt/dados-jellyfin/media` |
+| Immich | `400-immich.yaml` | `/mnt/dados-homelab-novo/photos` |
+| RomM | `420-romm.yaml` | caminho configurado no `hostPath` do manifesto |
 
 `hostPath` prende o pod ao nó local. Não use essa configuração em um cluster com vários nós sem substituir o armazenamento por volumes compartilhados.
+
+O Navidrome grava arquivos laterais de letras em `music`; por isso esse caminho
+precisa permitir escrita pelo usuário do contêiner. Kavita, Jellyfin, Radarr e
+Bazarr continuam usando seus mounts conforme indicado nos próprios manifestos.
 
 ## 2. Instalar k3s e configurar kubectl
 
@@ -90,7 +121,8 @@ helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
 helm repo update
 
 helm upgrade --install cert-manager jetstack/cert-manager \
-  --namespace cert-manager --create-namespace --set crds.enabled=true
+  --namespace cert-manager --create-namespace --version v1.21.1 \
+  --set crds.enabled=true
 ```
 
 Espere o cert-manager ficar pronto:
@@ -101,7 +133,7 @@ kubectl wait --for=condition=Available deployment --all -n cert-manager --timeou
 
 ## 4. Restaurar ou criar os segredos
 
-O arquivo `02-sealed-secrets.yaml` contém somente valores criptografados. Ele não pode ser decifrado por um controller novo sem a chave-mestre original.
+O arquivo `100-sealed-secrets.yaml` contém somente valores criptografados. Ele não pode ser decifrado por um controller novo sem a chave-mestre original.
 
 ### Reinstalação com a chave-mestre original
 
@@ -116,7 +148,7 @@ kubectl rollout status deployment/sealed-secrets -n kube-system --timeout=180s
 
 ### Instalação nova, sem a chave antiga
 
-Instale o controller e gere novos segredos; não aplique o `02-sealed-secrets.yaml` antigo esperando que ele funcione.
+Instale o controller e gere novos segredos; não aplique o `100-sealed-secrets.yaml` antigo esperando que ele funcione.
 
 ```bash
 helm upgrade --install sealed-secrets sealed-secrets/sealed-secrets \
@@ -133,6 +165,7 @@ Instale `kubeseal`, crie os `Secret` necessários com valores novos e sele cada 
 | `romm-secrets` | `DB_PASSWD`, `MARIADB_ROOT_PASSWORD`, `ROMM_AUTH_SECRET_KEY` |
 | `romm-screenscraper-secrets` | `SCREENSCRAPER_USER`, `SCREENSCRAPER_PASSWORD` (opcional) |
 | `romm-retroachievements-secrets` | `RETROACHIEVEMENTS_API_KEY` (opcional) |
+| `romm-steamgriddb-secrets` | `STEAMGRIDDB_API_KEY` (opcional) |
 | `vikunja-secrets` | `DB_PASSWORD` |
 | `n8n-secrets` | `DB_PASSWORD`, `ENCRYPTION_KEY` |
 
@@ -147,7 +180,7 @@ kubectl -n homelab create secret generic immich-db-secrets \
 unset PASSWORD
 ```
 
-Atualize `02-sealed-secrets.yaml` somente com o resultado criptografado. Faça backup criptografado da chave do controller:
+Atualize `100-sealed-secrets.yaml` somente com o resultado criptografado. Faça backup criptografado da chave do controller:
 
 ```bash
 kubectl get secret -n kube-system \
@@ -165,7 +198,7 @@ kubectl create secret generic cloudflare-api-token-secret \
   --namespace cert-manager --from-literal=api-token='COLE_O_TOKEN_AQUI'
 ```
 
-Revise o endereço de e-mail e os domínios em `07-certificates.yaml`. O certificado wildcard é criado nos namespaces `homelab`, `portainer` e `monitoring`.
+Revise o endereço de e-mail e os domínios em `200-certificates.yaml`. O certificado wildcard é criado nos namespaces `homelab`, `portainer` e `monitoring`.
 
 Se ainda não houver DNS interno ou público, adicione temporariamente no cliente:
 
@@ -206,6 +239,23 @@ curl -fsS https://financas.feanor.com.br/health
 curl -fsS -o /dev/null https://diario.feanor.com.br/
 ```
 
+### Plugin de letras do Navidrome
+
+O plugin comunitário `nd-lyrics` v7.2.0 deve existir em
+`/data/plugins/nd-lyrics.ndp`, dentro do PVC `navidrome-data`. Confira o pacote
+antes de habilitá-lo:
+
+```bash
+echo 'a9196e5b4e2c2eb2aaccb9f35c9faf6f488fe9081ff5685b1556901686c7540f  nd-lyrics.ndp' | sha256sum -c -
+kubectl cp nd-lyrics.ndp homelab/$(kubectl get pod -n homelab -l app=navidrome -o jsonpath='{.items[0].metadata.name}'):/data/plugins/nd-lyrics.ndp
+kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin rescan
+kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin validate nd-lyrics
+```
+
+Habilite o plugin para todos os usuários e bibliotecas, conceda acesso de
+escrita e mantenha `overwriteLyrics=false`. O manifesto configura a prioridade
+de letras e monta `/music` para escrita.
+
 ## 7. URLs e primeiro acesso
 
 | Serviço | URL |
@@ -236,7 +286,7 @@ A configuração operacional do Radarr e do Bazarr está resumida em [Manutenç�
 
 ### Actual Budget
 
-O Actual Budget 26.8.0 usa o manifesto `98-actual-budget.yaml`, persiste seus dados no PVC `actual-budget-data` e não requer um banco externo. A imagem está fixada pelo digest `sha256:ef66469837852d04dd67e70cb069dca71a95e6ab135a905f6568730bf3f71480` para `linux/amd64`. O Deployment usa a estratégia `Recreate` para impedir que dois pods acessem simultaneamente o mesmo banco SQLite durante atualizações. Consulte as [notas da versão 26.8.0](https://actualbudget.org/blog/release-26.8.0) antes de futuras atualizações.
+O Actual Budget 26.8.0 usa o manifesto `450-actual-budget.yaml`, persiste seus dados no PVC `actual-budget-data` e não requer um banco externo. A imagem está fixada pelo digest `sha256:ef66469837852d04dd67e70cb069dca71a95e6ab135a905f6568730bf3f71480` para `linux/amd64`. O Deployment usa a estratégia `Recreate` para impedir que dois pods acessem simultaneamente o mesmo banco SQLite durante atualizações. Consulte as [notas da versão 26.8.0](https://actualbudget.org/blog/release-26.8.0) antes de futuras atualizações.
 
 No primeiro acesso a `https://financas.feanor.com.br`:
 
@@ -257,7 +307,7 @@ Uma resposta `{"status":"UP"}` confirma que o servidor está saudável. O script
 
 ### Memos
 
-O Memos usa o manifesto `94-memos.yaml`, SQLite e o PVC `memos-data`. O Deployment mantém uma única réplica com estratégia `Recreate`, evitando que dois processos acessem o mesmo banco durante atualizações. A instância não publica uma URL pública no backend, mantendo desativadas as superfícies públicas de exploração e RSS.
+O Memos usa o manifesto `410-memos.yaml`, SQLite e o PVC `memos-data`. O Deployment mantém uma única réplica com estratégia `Recreate`, evitando que dois processos acessem o mesmo banco durante atualizações. A instância não publica uma URL pública no backend, mantendo desativadas as superfícies públicas de exploração e RSS.
 
 No primeiro acesso a `https://diario.feanor.com.br`, crie a conta administrativa. Em seguida, abra as configurações da instância e desative o cadastro de novos usuários. Não habilite acesso público caso o serviço seja usado como diário pessoal.
 
@@ -282,7 +332,8 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 kubectl create namespace monitoring
 helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
-  --namespace monitoring -f monitoring-values.local.yaml
+  --namespace monitoring --version 88.3.0 \
+  -f monitoring-values.local.yaml
 kubectl get pods -n monitoring -w
 kubectl apply -f monitoring-alerts.yaml
 kubectl get prometheusrule -n homelab homelab-pod-alerts
@@ -297,7 +348,7 @@ helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 kubectl create namespace argocd
 helm upgrade --install argocd argo/argo-cd \
-  --version 10.2.2 \
+  --version 10.4.0 \
   --namespace argocd \
   -f homelab-v2-kubernetes/argocd-values.yaml
 kubectl get pods -n argocd -w
