@@ -358,6 +358,20 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 
 Configure a Application do Argo CD para a branch desejada. Para este repositório, use `dev` para testes e `main` somente para versões aprovadas. Com `selfHeal` ativo, mudanças feitas manualmente no cluster serão revertidas pelo Argo CD.
 
+### Renovate no GitHub Actions
+
+O Renovate não instala componentes no cluster. O workflow
+`.github/workflows/renovate.yml` roda na branch padrão `main` e abre PRs contra
+`dev`. Em **Settings > Actions > General > Workflow permissions**, mantenha a
+permissão padrão como leitura e habilite **Allow GitHub Actions to create and
+approve pull requests**. As permissões adicionais ficam limitadas ao job no
+próprio workflow.
+
+Execute **Actions > Renovate > Run workflow** uma vez após configurar ou
+restaurar o repositório. Confirme que a execução cria ou atualiza a issue
+**Atualizações disponíveis** e que os PRs usam `dev` como base. O agendamento
+diário só funciona quando o workflow existe em `main`.
+
 ## 10. Backup e recuperação
 
 O backup frio inclui PVCs, metadados e, opcionalmente, as bibliotecas em `hostPath`. Ele para o k3s durante a cópia para manter bancos consistentes.
@@ -387,3 +401,4 @@ kubectl apply -k .
 ```
 
 Faça alterações e commits na branch `dev`. Promova para `main` somente após validar no cluster e revisar os manifests. O workflow de GitHub executa Gitleaks em push para `main` e em pull requests.
+O Renovate verifica imagens e Actions diariamente, mas nunca integra ou implanta atualizações automaticamente.
