@@ -34,4 +34,4 @@ resources:
   - 460-home-assistant.yaml
 
   # GitOps
-  - 900-argocd-application.yaml
+  - 901-argocd-applications.yaml

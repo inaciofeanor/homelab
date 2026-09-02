@@ -1,0 +1,133 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: homelab
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Aplicacoes e recursos declarativos do homelab
+  sourceRepos:
+    - git@github.com:inaciofeanor/homelab.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: homelab
+  source:
+    repoURL: git@github.com:inaciofeanor/homelab.git
+    targetRevision: dev
+    path: homelab-v2-kubernetes
+    directory:
+      include: 901-argocd-applications.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - PruneLast=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: homelab-applications
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - name: homelab-platform
+            include: "{000-namespace.yaml,200-certificates.yaml,210-argocd-certificate.yaml}"
+          - name: homelab-secrets
+            include: 100-sealed-secrets.yaml
+          - name: portainer
+            include: 300-portainer.yaml
+          - name: nextcloud
+            include: 310-nextcloud.yaml
+          - name: gitea
+            include: 320-gitea.yaml
+          - name: navidrome
+            include: 330-navidrome.yaml
+          - name: homelab-ingresses
+            include: 340-ingress.yaml
+          - name: kavita
+            include: 350-kavita.yaml
+          - name: jellyfin
+            include: 360-jellyfin.yaml
+          - name: radarr-bazarr
+            include: 370-radarr-bazarr.yaml
+          - name: homepage
+            include: 380-homepage.yaml
+          - name: homelab-maintenance
+            include: 390-pod-cleanup-cronjob.yaml
+          - name: immich
+            include: 400-immich.yaml
+          - name: memos
+            include: 410-memos.yaml
+          - name: romm
+            include: "{110-romm-screenscraper-sealed-secret.yaml,120-romm-retroachievements-sealed-secret.yaml,130-romm-steamgriddb-sealed-secret.yaml,420-romm.yaml}"
+          - name: vikunja
+            include: "{140-vikunja-sealed-secret.yaml,430-vikunja.yaml}"
+          - name: n8n
+            include: "{150-n8n-sealed-secret.yaml,440-n8n.yaml}"
+          - name: actual-budget
+            include: 450-actual-budget.yaml
+          - name: home-assistant
+            include: 460-home-assistant.yaml
+  template:
+    metadata:
+      name: "{{.name}}"
+      namespace: argocd
+      labels:
+        app.kubernetes.io/part-of: homelab
+    spec:
+      project: homelab
+      source:
+        repoURL: git@github.com:inaciofeanor/homelab.git
+        targetRevision: dev
+        path: homelab-v2-kubernetes
+        directory:
+          include: "{{.include}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: homelab
+      syncPolicy:
+        automated:
+          enabled: true
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions:
+          - ApplyOutOfSyncOnly=true
+          - PruneLast=true
+          - RespectIgnoreDifferences=true

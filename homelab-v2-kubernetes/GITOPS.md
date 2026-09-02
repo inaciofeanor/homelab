@@ -1,8 +1,18 @@
 # GitOps com Argo CD
 
 O Argo CD é instalado pelo chart Helm `argo/argo-cd`, fixado na versão `10.4.0`
-(Argo CD `v3.5.1`). Os workloads declarados neste diretório são controlados
-pela `Application` `homelab`, que acompanha a branch `dev`.
+(Argo CD `v3.5.1`). O manifesto `901-argocd-applications.yaml` cria uma
+`Application` para cada serviço e acompanha a branch `dev`.
+
+A `Application` `homelab-apps` controla somente o `AppProject` e o
+`ApplicationSet`. Na tela inicial, Nextcloud, Immich, Home Assistant e os
+demais serviços aparecem separadamente. Recursos compartilhados também aparecem
+como aplicações independentes: `homelab-platform`, `homelab-secrets`,
+`homelab-ingresses` e `homelab-maintenance`.
+
+O `ApplicationSet` usa uma lista explícita de arquivos, evitando que duas
+aplicações gerenciem o mesmo recurso. Todas apontam exclusivamente para o
+cluster local `https://kubernetes.default.svc`.
 
 ## Bootstrap do Argo CD
 
@@ -23,7 +33,7 @@ Depois de configurar o acesso ao repositório, aplique o bootstrap:
 
 ```bash
 kubectl apply -f homelab-v2-kubernetes/210-argocd-certificate.yaml
-kubectl apply -f homelab-v2-kubernetes/900-argocd-application.yaml
+kubectl apply -f homelab-v2-kubernetes/901-argocd-applications.yaml
 ```
 
 ## Fluxo de alterações
@@ -33,7 +43,7 @@ kubectl apply -f homelab-v2-kubernetes/900-argocd-application.yaml
 3. O Argo CD sincroniza automaticamente, remove recursos apagados do Git e
    corrige alterações manuais no cluster.
 4. Promova para `main` somente depois da validação. Para usar `main`, altere
-   `spec.source.targetRevision` em `900-argocd-application.yaml`.
+   os dois campos `targetRevision` em `901-argocd-applications.yaml`.
 
 Validações antes do push:
 
@@ -84,8 +94,9 @@ gh run view ID_DA_EXECUCAO --log
 ## Operação
 
 ```bash
-kubectl get applications,appprojects -n argocd
-kubectl get application homelab -n argocd \
+kubectl get applications,applicationsets,appprojects -n argocd
+kubectl get applications -n argocd \
+  -l app.kubernetes.io/part-of=homelab \
   -o custom-columns=SYNC:.status.sync.status,HEALTH:.status.health.status
 kubectl get pods -n argocd
 ```
@@ -107,5 +118,6 @@ kubectl delete secret argocd-initial-admin-secret -n argocd
 ## Recuperação
 
 O Argo CD pode ser reinstalado pelo comando Helm de bootstrap. Depois, restaure
-o Secret de acesso ao repositório e aplique `900-argocd-application.yaml`. Os
-PVCs dos aplicativos não são recriados durante a adoção do GitOps.
+o Secret de acesso ao repositório e aplique `901-argocd-applications.yaml`.
+O `ApplicationSet` recria automaticamente todas as aplicações. Os PVCs dos
+aplicativos não são recriados durante a adoção do GitOps.
