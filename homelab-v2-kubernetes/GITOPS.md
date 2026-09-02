@@ -1,7 +1,7 @@
 # GitOps com Argo CD
 
-O Argo CD e instalado pelo Helm chart `argo/argo-cd` fixado na versao `10.4.0`
-(Argo CD `v3.5.1`). Os workloads declarados neste diretorio sao controlados
+O Argo CD é instalado pelo chart Helm `argo/argo-cd`, fixado na versão `10.4.0`
+(Argo CD `v3.5.1`). Os workloads declarados neste diretório são controlados
 pela `Application` `homelab`, que acompanha a branch `dev`.
 
 ## Bootstrap do Argo CD
@@ -15,27 +15,27 @@ helm upgrade --install argocd argo/argo-cd \
   -f homelab-v2-kubernetes/argocd-values.yaml
 ```
 
-O repositorio GitHub e privado. Cadastre uma deploy key somente leitura no
-repositorio e crie um Secret do tipo `repository` no namespace `argocd`. A
+O repositório do GitHub é privado. Cadastre uma deploy key somente leitura no
+repositório e crie um Secret do tipo `repository` no namespace `argocd`. A
 chave privada nunca deve ser adicionada ao Git.
 
-Depois de configurar o acesso ao repositorio, aplique o bootstrap:
+Depois de configurar o acesso ao repositório, aplique o bootstrap:
 
 ```bash
 kubectl apply -f homelab-v2-kubernetes/210-argocd-certificate.yaml
 kubectl apply -f homelab-v2-kubernetes/900-argocd-application.yaml
 ```
 
-## Fluxo de alteracoes
+## Fluxo de alterações
 
 1. Altere e valide os manifests localmente.
 2. Crie um commit e envie para `dev`.
 3. O Argo CD sincroniza automaticamente, remove recursos apagados do Git e
-   corrige alteracoes manuais no cluster.
-4. Promova para `main` somente depois da validacao. Para usar `main`, altere
+   corrige alterações manuais no cluster.
+4. Promova para `main` somente depois da validação. Para usar `main`, altere
    `spec.source.targetRevision` em `900-argocd-application.yaml`.
 
-Validacoes antes do push:
+Validações antes do push:
 
 ```bash
 kubectl kustomize homelab-v2-kubernetes >/dev/null
@@ -49,6 +49,13 @@ consulta diariamente os registries e abre pull requests contra `dev`. Ele
 analisa os manifests Kubernetes deste diretório, arquivos Docker Compose e as
 próprias GitHub Actions. O Renovate altera somente o Git; o Argo CD continua
 sendo o único responsável por aplicar os manifests no cluster.
+
+Cada PR de imagem identifica no título o repositório da imagem e a versão
+anterior e nova. A tabela do corpo também mostra o arquivo alterado, o tipo da
+atualização e os digests. Quando o registry publica uma nova construção para a
+mesma tag, o título informa que se trata de uma troca de digest e mantém a tag
+visível. Assim, uma atualização de conteúdo imutável não é confundida com uma
+mudança de versão.
 
 Acompanhe as versões detectadas na issue **Atualizações disponíveis**. Antes de
 integrar um PR:
@@ -74,7 +81,7 @@ gh run list --workflow renovate.yml --limit 5
 gh run view ID_DA_EXECUCAO --log
 ```
 
-## Operacao
+## Operação
 
 ```bash
 kubectl get applications,appprojects -n argocd
@@ -84,7 +91,7 @@ kubectl get pods -n argocd
 ```
 
 A interface usa `https://argocd.feanor.com.br`. A senha inicial pode ser lida
-uma unica vez com:
+uma única vez com:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret \
@@ -97,8 +104,8 @@ Troque a senha no primeiro acesso e apague o Secret inicial:
 kubectl delete secret argocd-initial-admin-secret -n argocd
 ```
 
-## Recuperacao
+## Recuperação
 
 O Argo CD pode ser reinstalado pelo comando Helm de bootstrap. Depois, restaure
-o Secret de acesso ao repositorio e aplique `900-argocd-application.yaml`. Os
-PVCs dos aplicativos nao sao recriados durante a adocao GitOps.
+o Secret de acesso ao repositório e aplique `900-argocd-application.yaml`. Os
+PVCs dos aplicativos não são recriados durante a adoção do GitOps.

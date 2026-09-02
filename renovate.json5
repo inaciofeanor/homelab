@@ -5,6 +5,7 @@
     "docker:pinDigests"
   ],
   "baseBranchPatterns": ["dev"],
+  "ignorePaths": ["homelab-v1-docker-compose/**"],
   "kubernetes": {
     "managerFilePatterns": ["/^homelab-v2-kubernetes/.+\\.ya?ml$/"]
   },
@@ -29,9 +30,42 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Identificar claramente atualizações de imagens",
+      "description": "Detalhar imagem, versões e digests nos PRs",
       "matchDatasources": ["docker"],
-      "addLabels": ["container-image"]
+      "addLabels": ["container-image"],
+      "commitMessageAction": "Atualizar",
+      "commitMessageTopic": "imagem {{depName}}",
+      "commitMessageExtra": "de {{{currentVersion}}} para {{{newVersion}}}",
+      "prBodyColumns": [
+        "Imagem",
+        "Arquivo",
+        "Tipo",
+        "Versão atual",
+        "Nova versão",
+        "Digest atual",
+        "Novo digest"
+      ],
+      "prBodyDefinitions": {
+        "Imagem": "{{{depNameLinked}}}",
+        "Arquivo": "`{{{packageFile}}}`",
+        "Tipo": "`{{{updateType}}}`",
+        "Versão atual": "`{{{currentVersion}}}`",
+        "Nova versão": "`{{{newVersion}}}`",
+        "Digest atual": "{{#if currentDigest}}`{{{currentDigestShort}}}`{{else}}—{{/if}}",
+        "Novo digest": "{{#if newDigest}}`{{{newDigestShort}}}`{{else}}—{{/if}}"
+      }
+    },
+    {
+      "description": "Distinguir atualização do digest sem mudança de tag",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["digest"],
+      "commitMessageExtra": "digest da tag {{{currentVersion}}} de {{{currentDigestShort}}} para {{{newDigestShort}}}"
+    },
+    {
+      "description": "Identificar a fixação inicial de digest",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["pinDigest"],
+      "commitMessageExtra": "tag {{{currentVersion}}} no digest {{{newDigestShort}}}"
     },
     {
       "description": "Agrupar apenas atualizações das actions do próprio workflow",

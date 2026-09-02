@@ -68,7 +68,7 @@ sudo mkdir -p /mnt/dados-homelab-novo/{ebooks,music,photos,roms}
 sudo mkdir -p /mnt/dados-jellyfin
 ```
 
-O disco dedicado de m�dia deve ser persistido no `/etc/fstab`. Para o disco identificado pelo label `jellyfin-filmes`:
+O disco dedicado de mídia deve ser persistido no `/etc/fstab`. Para o disco identificado pelo label `jellyfin-filmes`:
 
 ```fstab
 LABEL=jellyfin-filmes /mnt/dados-jellyfin ext4 defaults,nofail 0 2
@@ -256,6 +256,33 @@ Habilite o plugin para todos os usuários e bibliotecas, conceda acesso de
 escrita e mantenha `overwriteLyrics=false`. O manifesto configura a prioridade
 de letras e monta `/music` para escrita.
 
+### Agenda e tarefas no Nextcloud
+
+Depois que o Nextcloud estiver instalado e saudável, instale os aplicativos
+oficiais Calendar e Tasks. Eles ficam em `/var/www/html/custom_apps`, dentro do
+PVC `nextcloud-data`, e persistem durante recriações do pod:
+
+```bash
+kubectl exec -n homelab deploy/nextcloud -- \
+  su -s /bin/sh www-data -c \
+  'php /var/www/html/occ app:install calendar && php /var/www/html/occ app:install tasks'
+```
+
+O comando `app:install` também habilita os aplicativos. Caso já estejam
+instalados, habilite-os explicitamente e confirme as versões:
+
+```bash
+kubectl exec -n homelab deploy/nextcloud -- \
+  su -s /bin/sh www-data -c \
+  'php /var/www/html/occ app:enable calendar tasks && php /var/www/html/occ app:list --enabled'
+```
+
+O Calendar gerencia compromissos e eventos recorrentes; o Tasks gerencia
+tarefas, vencimentos, prioridades e lembretes. A sincronização móvel usa
+CalDAV. No Android, use um adaptador CalDAV, como DAVx5, com um calendário e um
+cliente de tarefas compatíveis. No iOS, adicione uma conta CalDAV apontando para
+`https://nextcloud.feanor.com.br/remote.php/dav`.
+
 ## 7. URLs e primeiro acesso
 
 | Serviço | URL |
@@ -356,7 +383,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 -d; echo
 ```
 
-Configure a Application do Argo CD para a branch desejada. Para este repositório, use `dev` para testes e `main` somente para versões aprovadas. Com `selfHeal` ativo, mudanças feitas manualmente no cluster serão revertidas pelo Argo CD.
+Configure o recurso `Application` do Argo CD para a branch desejada. Para este repositório, use `dev` para testes e `main` somente para versões aprovadas. Com `selfHeal` ativo, mudanças feitas manualmente no cluster serão revertidas pelo Argo CD.
 
 ### Renovate no GitHub Actions
 
