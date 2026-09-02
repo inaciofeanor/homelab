@@ -361,7 +361,7 @@ kubectl exec -n homelab deploy/home-assistant -- python -m homeassistant --scrip
 curl -fsS -o /dev/null https://casa.feanor.com.br/
 ```
 
-O contêiner não é privilegiado. Para descoberta DHCP e uso do adaptador Bluetooth do host, recebe somente `NET_RAW` e `NET_ADMIN` e monta `/run/dbus` como somente leitura. Dispositivos USB para Zigbee ou Z-Wave não são expostos; mapeie apenas o dispositivo necessário e reavalie o contexto de segurança.
+O contêiner não recebe acesso privilegiado nem dispositivos USB/Bluetooth. Para Zigbee, Z-Wave ou Bluetooth, mapeie somente o dispositivo necessário e reavalie o contexto de segurança.
 O script de backup geral inclui o banco SQLite e os anexos armazenados nesse PVC automaticamente.
 
 ## 8. Monitoramento (opcional)

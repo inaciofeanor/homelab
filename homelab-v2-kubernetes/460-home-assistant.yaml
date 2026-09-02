@@ -92,8 +92,6 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
-              add: ["NET_ADMIN", "NET_RAW"]
-
           startupProbe:
             tcpSocket:
               port: http
@@ -113,9 +111,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /config
-            - name: dbus
-              mountPath: /run/dbus
-              readOnly: true
       volumes:
         - name: data
           persistentVolumeClaim:
@@ -123,10 +118,6 @@ spec:
         - name: bootstrap
           configMap:
             name: home-assistant-bootstrap
-        - name: dbus
-          hostPath:
-            path: /run/dbus
-            type: Directory
 ---
 apiVersion: v1
 kind: Service
