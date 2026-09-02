@@ -89,6 +89,17 @@ e reverta o commit no Git. Se a migração tiver alterado o banco de forma
 incompatível, restaure em conjunto o dump do MariaDB e os volumes auxiliares do
 backup criado antes da atualização; não restaure apenas um deles.
 
+### Manutenção do Home Assistant
+
+```bash
+kubectl get deployment/home-assistant service/home-assistant ingress/home-assistant pvc/home-assistant-data -n homelab
+kubectl logs -n homelab deployment/home-assistant --tail=200
+kubectl exec -n homelab deploy/home-assistant -- python -m homeassistant --script check_config --config /config
+kubectl top pod -n homelab -l app=home-assistant
+```
+
+A imagem é fixada por versão e digest em `460-home-assistant.yaml`. Faça backup do PVC antes de atualizar. O `ConfigMap` só inicia a configuração; alterações posteriores em `/config/configuration.yaml` permanecem no PVC. Esta instalação não possui Supervisor: mantenha dependências como MQTT em serviços separados.
+
 ## Atualizações automáticas de imagens
 
 O workflow `.github/workflows/renovate.yml` executa o Renovate diariamente às

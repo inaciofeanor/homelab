@@ -302,6 +302,7 @@ cliente de tarefas compatíveis. No iOS, adicione uma conta CalDAV apontando par
 | n8n | `https://automacao.feanor.com.br` |
 | Actual Budget | `https://financas.feanor.com.br` |
 | Memos | `https://diario.feanor.com.br` |
+| Home Assistant | `https://casa.feanor.com.br` |
 
 O SSH do Gitea usa NodePort:
 
@@ -346,6 +347,21 @@ kubectl get pvc memos-data -n homelab
 curl -fsS -o /dev/null https://diario.feanor.com.br/
 ```
 
+
+### Home Assistant
+
+O Home Assistant 2026.8.3 usa o manifesto `460-home-assistant.yaml` na modalidade Container, sem Supervisor nem loja de aplicativos. O PVC `home-assistant-data` reserva 10 GiB para `/config`. A rede do host permite descoberta por mDNS/SSDP e a estratégia `Recreate` protege o banco SQLite padrão.
+
+O pod reserva `100m` de CPU e `512Mi` de memória, com limites de `1` CPU e `2Gi`. No primeiro acesso a `https://casa.feanor.com.br`, conclua o assistente e crie a conta proprietária. O `ConfigMap` de bootstrap cria `configuration.yaml` somente se ele não existir e restringe a confiança no proxy reverso às redes internas do cluster.
+
+```bash
+kubectl rollout status deployment/home-assistant -n homelab --timeout=600s
+kubectl get pvc home-assistant-data -n homelab
+kubectl exec -n homelab deploy/home-assistant -- python -m homeassistant --script check_config --config /config
+curl -fsS -o /dev/null https://casa.feanor.com.br/
+```
+
+O contêiner não recebe acesso privilegiado nem dispositivos USB/Bluetooth. Para Zigbee, Z-Wave ou Bluetooth, mapeie somente o dispositivo necessário e reavalie o contexto de segurança.
 O script de backup geral inclui o banco SQLite e os anexos armazenados nesse PVC automaticamente.
 
 ## 8. Monitoramento (opcional)
