@@ -115,6 +115,9 @@ token por uma credencial pessoal gravada nos manifests.
 As regras ficam em `renovate.json5`. Atualizações major aparecem primeiro na
 issue **Atualizações disponíveis** e só geram PR depois de aprovadas nessa
 issue. As demais respeitam uma espera mínima de três dias após a publicação.
+Para updates Docker de `digest` e `pinDigest`, a espera é aplicada quando o
+registry fornece um timestamp confiável; sem timestamp, a proposta é liberada
+para não ficar bloqueada indefinidamente em **Pending Status Checks**.
 Nos PRs de imagens, o título informa a imagem e a mudança da versão anterior
 para a nova. O corpo apresenta imagem, manifesto, tipo da atualização, versões
 e digests em colunas separadas. Se apenas o digest de uma tag for alterado, o
@@ -134,6 +137,10 @@ somente a stack Kubernetes atual participa das propostas de atualização.
 Como workflows agendados só são executados a partir da branch padrão, esses
 arquivos precisam existir em `main`, embora os PRs de dependências tenham
 `dev` como branch base.
+
+Atualmente o workflow fixa `renovatebot/github-action` v46.2.5 por SHA e o
+Renovate CLI em 44.65.5. Ao atualizar qualquer um, execute manualmente e confira
+as anotações do job antes de considerar a manutenção concluída.
 
 ## Backup
 

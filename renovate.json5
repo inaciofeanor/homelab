@@ -59,12 +59,14 @@
       "description": "Distinguir atualização do digest sem mudança de tag",
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["digest"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
       "commitMessageExtra": "digest da tag {{{currentVersion}}} de {{{currentDigestShort}}} para {{{newDigestShort}}}"
     },
     {
       "description": "Identificar a fixação inicial de digest",
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["pinDigest"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
       "commitMessageExtra": "tag {{{currentVersion}}} no digest {{{newDigestShort}}}"
     },
     {
