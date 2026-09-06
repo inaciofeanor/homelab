@@ -54,8 +54,9 @@ kubectl apply --dry-run=server -k homelab-v2-kubernetes
 
 ## Atualizações de imagens com Renovate
 
-O workflow `.github/workflows/renovate.yml`, executado a partir de `main`,
-consulta diariamente os registries e abre pull requests contra `dev`. Ele
+O workflow agendado `.github/workflows/renovate.yml` é carregado da branch
+padrão `main`, consulta diariamente os registries e usa `dev` como branch base
+das atualizações. Execuções manuais também podem ser iniciadas em `dev`. Ele
 analisa os manifests Kubernetes deste diretório, arquivos Docker Compose e as
 próprias GitHub Actions. O Renovate altera somente o Git; o Argo CD continua
 sendo o único responsável por aplicar os manifests no cluster.
@@ -78,6 +79,14 @@ integrar um PR:
 
 Não integre em lote o PR inicial de pinagem sem revisar cada imagem. Atualizações
 major exigem aprovação no Dependency Dashboard e nenhum PR usa automerge.
+As demais atualizações de versão aguardam três dias após a publicação. Trocas
+de digest e pinagens iniciais também respeitam esse período quando o registry
+informa a data; quando não há timestamp, o Renovate pode prosseguir para evitar
+que a atualização permaneça indefinidamente em **Pending Status Checks**.
+
+A action é fixada por SHA e a versão do Renovate CLI também é explícita no
+workflow. Atualize ambas de forma controlada e confirme a versão usada nas
+anotações da execução.
 
 O workflow utiliza o `GITHUB_TOKEN` efêmero com permissões para Contents,
 Issues, Pull requests e Commit statuses. No GitHub, mantenha habilitada a opção

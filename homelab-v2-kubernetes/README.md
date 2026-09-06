@@ -24,7 +24,9 @@ kubectl get pods -A
 As imagens e Actions são verificadas diariamente pelo Renovate. As propostas
 aparecem como pull requests contra `dev`, sem automerge; atualizações major
 precisam ser liberadas na issue **Atualizações disponíveis**. O Renovate não
-altera o cluster diretamente: depois do merge, o Argo CD aplica a mudança e o
+propõe versões Docker antes do período de três dias; digests sem timestamp do
+registry não ficam bloqueados indefinidamente. O Renovate não altera o
+cluster diretamente: depois do merge, o Argo CD aplica a mudança e o
 serviço deve ser validado antes da promoção para `main`. Consulte
 [GitOps com Argo CD](GITOPS.md#atualizações-de-imagens-com-renovate).
 

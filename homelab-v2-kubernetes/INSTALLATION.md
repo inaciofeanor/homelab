@@ -403,8 +403,9 @@ Configure o recurso `Application` do Argo CD para a branch desejada. Para este r
 
 ### Renovate no GitHub Actions
 
-O Renovate não instala componentes no cluster. O workflow
-`.github/workflows/renovate.yml` roda na branch padrão `main` e abre PRs contra
+O Renovate não instala componentes no cluster. O agendamento do workflow
+`.github/workflows/renovate.yml` é carregado da branch padrão `main`, enquanto
+as atualizações usam `dev` como branch base. Execuções manuais podem usar
 `dev`. Em **Settings > Actions > General > Workflow permissions**, mantenha a
 permissão padrão como leitura e habilite **Allow GitHub Actions to create and
 approve pull requests**. As permissões adicionais ficam limitadas ao job no
@@ -414,6 +415,10 @@ Execute **Actions > Renovate > Run workflow** uma vez após configurar ou
 restaurar o repositório. Confirme que a execução cria ou atualiza a issue
 **Atualizações disponíveis** e que os PRs usam `dev` como base. O agendamento
 diário só funciona quando o workflow existe em `main`.
+
+O workflow mantém a action fixada por SHA e o Renovate CLI por versão. Após
+atualizá-los, execute o workflow manualmente e confirme nos checks a versão
+efetivamente utilizada.
 
 ## 10. Backup e recuperação
 
