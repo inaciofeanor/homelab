@@ -58,7 +58,7 @@ spec:
           ports:
             - {name: mariadb, containerPort: 3306}
           resources:
-            requests: {cpu: 100m, memory: 256Mi}
+            requests: {cpu: 25m, memory: 256Mi}
             limits: {cpu: 500m, memory: 1Gi}
           securityContext:
             allowPrivilegeEscalation: false
@@ -150,7 +150,7 @@ spec:
             - {name: legacy-1100, containerPort: 7174}
             - {name: legacy-860, containerPort: 7175}
           resources:
-            requests: {cpu: 250m, memory: 512Mi}
+            requests: {cpu: 75m, memory: 512Mi}
             limits: {cpu: "2", memory: 3Gi}
           securityContext:
             allowPrivilegeEscalation: false
@@ -228,12 +228,12 @@ spec:
             - {name: http, containerPort: 8088}
             - {name: grpc, containerPort: 9090}
           resources:
-            requests: {cpu: 50m, memory: 64Mi}
+            requests: {cpu: 10m, memory: 64Mi}
             limits: {cpu: 250m, memory: 256Mi}
           securityContext:
             allowPrivilegeEscalation: false
           readinessProbe:
-            httpGet: {path: /login, port: http}
+            tcpSocket: {port: http}
             periodSeconds: 10
             failureThreshold: 6
 ---
@@ -299,7 +299,7 @@ spec:
           ports:
             - {name: http, containerPort: 80}
           resources:
-            requests: {cpu: 50m, memory: 128Mi}
+            requests: {cpu: 10m, memory: 128Mi}
             limits: {cpu: 500m, memory: 512Mi}
           securityContext:
             allowPrivilegeEscalation: false
