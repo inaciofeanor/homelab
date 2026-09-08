@@ -35,7 +35,7 @@
       "addLabels": ["container-image"],
       "commitMessageAction": "Atualizar",
       "commitMessageTopic": "imagem {{depName}}",
-      "commitMessageExtra": "de {{{currentVersion}}} para {{{newVersion}}}",
+      "commitMessageExtra": "de {{{currentValue}}} para {{{newValue}}}",
       "prBodyColumns": [
         "Imagem",
         "Arquivo",
@@ -49,8 +49,8 @@
         "Imagem": "{{{depNameLinked}}}",
         "Arquivo": "`{{{packageFile}}}`",
         "Tipo": "`{{{updateType}}}`",
-        "Versão atual": "`{{{currentVersion}}}`",
-        "Nova versão": "`{{{newVersion}}}`",
+        "Versão atual": "{{#if currentValue}}`{{{currentValue}}}`{{else}}{{#if currentVersion}}`{{{currentVersion}}}`{{else}}`latest (implícita)`{{/if}}{{/if}}",
+        "Nova versão": "{{#if newValue}}`{{{newValue}}}`{{else}}{{#if newVersion}}`{{{newVersion}}}`{{else}}`latest (implícita)`{{/if}}{{/if}}",
         "Digest atual": "{{#if currentDigest}}`{{{currentDigestShort}}}`{{else}}—{{/if}}",
         "Novo digest": "{{#if newDigest}}`{{{newDigestShort}}}`{{else}}—{{/if}}"
       }
@@ -60,14 +60,14 @@
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["digest"],
       "minimumReleaseAgeBehaviour": "timestamp-optional",
-      "commitMessageExtra": "digest da tag {{{currentVersion}}} de {{{currentDigestShort}}} para {{{newDigestShort}}}"
+      "commitMessageExtra": "digest da tag {{#if currentValue}}{{{currentValue}}}{{else}}latest (implícita){{/if}} de {{{currentDigestShort}}} para {{{newDigestShort}}}"
     },
     {
       "description": "Identificar a fixação inicial de digest",
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["pinDigest"],
       "minimumReleaseAgeBehaviour": "timestamp-optional",
-      "commitMessageExtra": "tag {{{currentVersion}}} no digest {{{newDigestShort}}}"
+      "commitMessageExtra": "tag {{#if currentValue}}{{{currentValue}}}{{else}}latest (implícita){{/if}} no digest {{{newDigestShort}}}"
     },
     {
       "description": "Agrupar apenas atualizações das actions do próprio workflow",

@@ -62,11 +62,13 @@ próprias GitHub Actions. O Renovate altera somente o Git; o Argo CD continua
 sendo o único responsável por aplicar os manifests no cluster.
 
 Cada PR de imagem identifica no título o repositório da imagem e a versão
-anterior e nova. A tabela do corpo também mostra o arquivo alterado, o tipo da
-atualização e os digests. Quando o registry publica uma nova construção para a
-mesma tag, o título informa que se trata de uma troca de digest e mantém a tag
-visível. Assim, uma atualização de conteúdo imutável não é confundida com uma
-mudança de versão.
+anterior e nova. A tabela do corpo mostra separadamente a tag ou versão atual, a
+nova tag ou versão, o digest atual, o novo digest, o arquivo e o tipo da
+atualização. Quando a referência não declara uma tag, as colunas de versão
+mostram `latest (implícita)`, que é o valor efetivamente usado pelo runtime.
+Quando o registry publica uma nova construção para a mesma tag, o título informa
+que se trata de uma troca de digest e mantém a tag visível. Assim, uma
+atualização de conteúdo imutável não é confundida com uma mudança de versão.
 
 Acompanhe as versões detectadas na issue **Atualizações disponíveis**. Antes de
 integrar um PR:
