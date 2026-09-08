@@ -280,7 +280,7 @@ spec:
               valueFrom:
                 secretKeyRef: {name: canary-secrets, key: DB_PASSWORD}
             - {name: CANARY_SERVER_NAME, value: Feanor Canary}
-            - {name: CANARY_SERVER_IP, value: "192.168.0.23"}
+            - {name: CANARY_SERVER_IP, value: canary-game}
             - {name: CANARY_SERVER_LOCATION, value: BRA}
             - {name: CANARY_LOGIN_PORT, value: "7171"}
             - {name: CANARY_GAME_PORT, value: "7172"}
@@ -338,6 +338,12 @@ spec:
     - host: canary.feanor.com.br
       http:
         paths:
+          - path: /login
+            pathType: Exact
+            backend:
+              service:
+                name: canary-login
+                port: {number: 8088}
           - path: /
             pathType: Prefix
             backend:

@@ -264,7 +264,7 @@ fica restrito à LAN ou VPN, mesmo usando HTTPS:
 | Componente | Endereço |
 | --- | --- |
 | MyAAC | `https://canary.feanor.com.br` |
-| Login HTTP | `http://192.168.0.23:30088` |
+| Login HTTP | `https://canary.feanor.com.br/login` |
 | Login do cliente | `192.168.0.23:7171` |
 | Jogo atual | `192.168.0.23:7172` |
 | Cliente 11.00 | `192.168.0.23:7174` |
@@ -276,6 +276,11 @@ As contas de teste estão desabilitadas. A conta administrativa do MyAAC é
 em um gerenciador de senhas e não versione esse arquivo.
 
 O servidor persiste banco no PVC `canary-db-data` e mapa, configuração e
+O MyAAC consulta o status pelo serviço interno `canary-game:7173`, evitando
+hairpin pelo LoadBalancer. O cliente moderno deve usar exclusivamente
+`https://canary.feanor.com.br/login`; o Ingress encaminha esse caminho ao
+login server, enquanto os demais caminhos continuam no MyAAC.
+
 datapack no PVC `canary-server-data`. A imagem do MyAAC é construída pelo
 workflow `.github/workflows/canary-myaac-image.yml`; o manifesto usa tag e
 digest imutável. Para editar o jogo, mantenha um fork do Canary, altere C++/Lua

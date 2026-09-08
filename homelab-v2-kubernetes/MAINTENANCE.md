@@ -30,6 +30,12 @@ O MyAAC usa `https://canary.feanor.com.br`; o registro A aponta para
 acessíveis na LAN. Não faça redirecionamento no roteador sem antes adicionar
 proteção contra abuso, firewall e uma política de atualização.
 
+O status exibido pelo MyAAC usa `canary-game:7173` dentro do cluster. O login
+HTTP usa `https://canary.feanor.com.br/login` e deve aparecer nos logs de
+`deployment/canary-login`. Se o site estiver online, mas o cliente não
+autenticar, confirme primeiro que ele está configurado com esse endpoint e que
+está enviando o e-mail da conta, não o nome do personagem.
+
 ## Verificação diária
 
 ```bash
