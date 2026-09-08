@@ -6,6 +6,7 @@
   ],
   "baseBranchPatterns": ["dev"],
   "ignorePaths": ["homelab-v1-docker-compose/**"],
+  "ignoreDeps": ["ghcr.io/immich-app/postgres", "postgres"],
   "kubernetes": {
     "managerFilePatterns": ["/^homelab-v2-kubernetes/.+\\.ya?ml$/"]
   },
