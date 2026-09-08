@@ -105,6 +105,13 @@
       "matchFileNames": ["**/430-vikunja.yaml", "**/440-n8n.yaml"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "Bloquear upgrades major no MariaDB do Canary",
+      "matchManagers": ["kubernetes"],
+      "matchFileNames": ["**/470-canary.yaml"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {

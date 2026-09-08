@@ -1,0 +1,318 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: canary-db-data
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: canary-server-data
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-db
+  namespace: homelab
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: canary-db
+  template:
+    metadata:
+      labels:
+        app: canary-db
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mariadb
+          image: mariadb:11.4.13@sha256:611a2fcc5fa7c6ceb8644c6f74b25ede004ff6c3a6b38c8f8c23d3bbf6c26430
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: MARIADB_DATABASE, value: canary}
+            - {name: MARIADB_USER, value: canary}
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: canary-secrets, key: DB_PASSWORD}
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: canary-secrets, key: DB_ROOT_PASSWORD}
+          ports:
+            - {name: mariadb, containerPort: 3306}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: 500m, memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+          startupProbe:
+            exec:
+              command: ["healthcheck.sh", "--connect", "--innodb_initialized"]
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command: ["healthcheck.sh", "--connect", "--innodb_initialized"]
+            periodSeconds: 10
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/mysql}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: canary-db-data}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: canary-db, namespace: homelab}
+spec:
+  selector: {app: canary-db}
+  ports:
+    - {name: mariadb, port: 3306, targetPort: mariadb}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary
+  namespace: homelab
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: canary
+  template:
+    metadata:
+      labels:
+        app: canary
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: canary
+          image: ghcr.io/opentibiabr/canary:latest@sha256:a3fbd5996705850f2aa004f82509d3741cafd2e7f01d3980e17f073df9ea6979
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: CANARY_DB_HOST, value: canary-db}
+            - {name: CANARY_DB_PORT, value: "3306"}
+            - {name: CANARY_DB_NAME, value: canary}
+            - {name: CANARY_DB_USER, value: canary}
+            - name: CANARY_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: canary-secrets, key: DB_PASSWORD}
+            - {name: CANARY_SERVER_NAME, value: Feanor Canary}
+            - {name: CANARY_SERVER_IP, value: "192.168.0.23"}
+            - {name: CANARY_SERVER_LOCATION, value: BRA}
+            - {name: CANARY_LOGIN_PORT, value: "7171"}
+            - {name: CANARY_GAME_PORT, value: "7172"}
+            - {name: CANARY_LEGACY_1100_GAME_PORT, value: "7174"}
+            - {name: CANARY_LEGACY_860_GAME_PORT, value: "7175"}
+            - {name: CANARY_STATUS_PORT, value: "7173"}
+            - {name: CANARY_STATUS_TIMEOUT, value: "5000"}
+            - {name: CANARY_TEST_ACCOUNTS, value: "false"}
+            - {name: CANARY_DATA_PACK, value: data-otservbr-global}
+            - {name: CANARY_MAP_URL, value: "https://github.com/opentibiabr/canary/releases/download/v3.6.1/otservbr.otbm"}
+            - {name: OT_DB_HOST, value: canary-db}
+            - {name: OT_DB_PORT, value: "3306"}
+            - {name: OT_DB_DATABASE, value: canary}
+            - {name: OT_DB_USER, value: canary}
+            - name: OT_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: canary-secrets, key: DB_PASSWORD}
+            - {name: OT_SERVER_IP, value: "192.168.0.23"}
+            - {name: OT_SERVER_LOGIN_PORT, value: "7171"}
+            - {name: OT_SERVER_GAME_PORT, value: "7172"}
+            - {name: OT_SERVER_STATUS_PORT, value: "7173"}
+            - {name: OT_SERVER_TEST_ACCOUNTS, value: "false"}
+            - {name: OT_SERVER_DATA, value: data-otservbr-global}
+            - {name: OT_SERVER_MAP, value: "https://github.com/opentibiabr/canary/releases/download/v3.6.1/otservbr.otbm"}
+          ports:
+            - {name: login, containerPort: 7171}
+            - {name: game, containerPort: 7172}
+            - {name: status, containerPort: 7173}
+            - {name: legacy-1100, containerPort: 7174}
+            - {name: legacy-860, containerPort: 7175}
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {cpu: "2", memory: 3Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+          startupProbe:
+            tcpSocket: {port: game}
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 180
+          readinessProbe:
+            tcpSocket: {port: game}
+            periodSeconds: 10
+            timeoutSeconds: 2
+          volumeMounts:
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: canary-server-data}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-game
+  namespace: homelab
+spec:
+  type: LoadBalancer
+  selector: {app: canary}
+  ports:
+    - {name: login, port: 7171, targetPort: login, protocol: TCP}
+    - {name: game, port: 7172, targetPort: game, protocol: TCP}
+    - {name: status, port: 7173, targetPort: status, protocol: TCP}
+    - {name: legacy-1100, port: 7174, targetPort: legacy-1100, protocol: TCP}
+    - {name: legacy-860, port: 7175, targetPort: legacy-860, protocol: TCP}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-login
+  namespace: homelab
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: canary-login
+  template:
+    metadata:
+      labels:
+        app: canary-login
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: login-server
+          image: opentibiabr/login-server:v1.1.3@sha256:41a47cb190be3bf35d1344b2f51c543071f16787c3d4f0f7e330e9a9d0618f49
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: LOGIN_HTTP_PORT, value: "8088"}
+            - {name: LOGIN_GRPC_PORT, value: "9090"}
+            - {name: MYSQL_HOST, value: canary-db}
+            - {name: MYSQL_PORT, value: "3306"}
+            - {name: MYSQL_DBNAME, value: canary}
+            - {name: MYSQL_USER, value: canary}
+            - name: MYSQL_PASS
+              valueFrom:
+                secretKeyRef: {name: canary-secrets, key: DB_PASSWORD}
+            - {name: SERVER_NAME, value: Feanor Canary}
+            - {name: SERVER_IP, value: "192.168.0.23"}
+            - {name: SERVER_PORT, value: "7172"}
+            - {name: SERVER_LOCATION, value: BRA}
+            - {name: RATE_LIMITER_RATE, value: "2"}
+            - {name: RATE_LIMITER_BURST, value: "5"}
+          ports:
+            - {name: http, containerPort: 8088}
+            - {name: grpc, containerPort: 9090}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 250m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+          readinessProbe:
+            httpGet: {path: /login, port: http}
+            periodSeconds: 10
+            failureThreshold: 6
+---
+apiVersion: v1
+kind: Service
+metadata: {name: canary-login, namespace: homelab}
+spec:
+  type: NodePort
+  selector: {app: canary-login}
+  ports:
+    - {name: http, port: 8088, targetPort: http, nodePort: 30088}
+    - {name: grpc, port: 9090, targetPort: grpc}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-myaac
+  namespace: homelab
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: canary-myaac
+  template:
+    metadata:
+      labels:
+        app: canary-myaac
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: myaac
+          image: ghcr.io/inaciofeanor/homelab-canary-myaac:canary-3.6.1@sha256:40d76f2b472dc772bb2286cf18a69b11e4f35d96fa86b7bb4f9de56093958922
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: CANARY_DB_HOST, value: canary-db}
+            - {name: CANARY_DB_PORT, value: "3306"}
+            - {name: CANARY_DB_NAME, value: canary}
+            - {name: CANARY_DB_USER, value: canary}
+            - name: CANARY_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: canary-secrets, key: DB_PASSWORD}
+            - {name: CANARY_SERVER_NAME, value: Feanor Canary}
+            - {name: CANARY_SERVER_IP, value: "192.168.0.23"}
+            - {name: CANARY_SERVER_LOCATION, value: BRA}
+            - {name: CANARY_LOGIN_PORT, value: "7171"}
+            - {name: CANARY_GAME_PORT, value: "7172"}
+            - {name: CANARY_STATUS_PORT, value: "7173"}
+            - {name: CANARY_STATUS_TIMEOUT, value: "5000"}
+            - {name: CANARY_DATA_PACK, value: data-otservbr-global}
+            - {name: MYAAC_SITE_URL, value: "http://192.168.0.23:30086"}
+            - {name: MYAAC_ADMIN_ACCOUNT, value: canaryadmin}
+            - {name: MYAAC_ADMIN_EMAIL, value: admin@feanor.com.br}
+            - name: MYAAC_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: canary-secrets, key: MYAAC_ADMIN_PASSWORD}
+            - {name: MYAAC_ADMIN_PLAYER, value: ADM1}
+            - {name: MYAAC_CLIENT_VERSION, value: "1513"}
+            - {name: MYAAC_TIMEZONE, value: America/Sao_Paulo}
+          ports:
+            - {name: http, containerPort: 80}
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+          readinessProbe:
+            httpGet: {path: /, port: http}
+            periodSeconds: 10
+            failureThreshold: 12
+---
+apiVersion: v1
+kind: Service
+metadata: {name: canary-myaac, namespace: homelab}
+spec:
+  type: NodePort
+  selector: {app: canary-myaac}
+  ports:
+    - {name: http, port: 80, targetPort: http, nodePort: 30086}

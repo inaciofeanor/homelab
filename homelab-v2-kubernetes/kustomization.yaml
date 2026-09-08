@@ -8,6 +8,7 @@ resources:
   - 120-romm-retroachievements-sealed-secret.yaml
   - 130-romm-steamgriddb-sealed-secret.yaml
   - 140-vikunja-sealed-secret.yaml
+  - 160-canary-sealed-secret.yaml
   - 150-n8n-sealed-secret.yaml
 
   # Certificados
@@ -30,6 +31,7 @@ resources:
   - 420-romm.yaml
   - 430-vikunja.yaml
   - 440-n8n.yaml
+  - 470-canary.yaml
   - 450-actual-budget.yaml
   - 460-home-assistant.yaml
 
