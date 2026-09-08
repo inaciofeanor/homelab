@@ -18,6 +18,11 @@ O plugin `nd-lyrics` e suas configurações ficam no PVC `navidrome-data` e entr
 no backup normal de PVCs. As letras geradas ficam ao lado das músicas no
 `hostPath`; elas só entram no backup geral quando `--include-hostpaths` é usado
 ou quando a biblioteca musical é copiada por outro processo.
+O Canary é coberto pelo backup frio geral por meio dos PVCs
+`canary-db-data` e `canary-server-data`. O primeiro contém o MariaDB; o
+segundo contém mapa, datapack, configuração e o dump auxiliar criado no
+startup. Para consistência, não copie apenas um dos volumes e não restaure
+versões de momentos diferentes.
 
 O PVC `home-assistant-data` contém `configuration.yaml`, `.storage`, o banco SQLite padrão e eventuais backups locais. O backup frio inclui todo o `/config` com o banco consistente, pois interrompe o k3s durante a cópia.
 

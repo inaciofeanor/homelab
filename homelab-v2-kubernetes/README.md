@@ -7,6 +7,9 @@ Stack de nó único baseada em k3s e Traefik. Os manifests em `homelab-v2-kubern
 - [Instalação](INSTALLATION.md): preparação de uma máquina nova, k3s, controllers, secrets, certificados, DNS e implantação da stack.
 - [Manutenção](MAINTENANCE.md): verificações diárias, atualização, diagnóstico, monitoramento, certificados, rotação de secrets e Argo CD.
 - [GitOps com Argo CD](GITOPS.md): bootstrap, sincronização automática, PRs de atualização do Renovate e recuperação.
+O Canary 3.6.1 oferece um servidor OpenTibia editável para uso privado na rede
+local, com MyAAC e login server separados.
+
 - [Backup e restauração](BACKUP.md): cópia fria dos PVCs, bibliotecas em `hostPath` e recuperação em outra máquina.
 
 O Home Assistant é executado como Container, com dados persistentes em PVC e acesso em `https://casa.feanor.com.br`.

@@ -2,6 +2,33 @@
 
 Este guia reúne as rotinas operacionais do homelab. Para construir ou reconstruir o servidor, use [INSTALLATION.md](INSTALLATION.md). Para recuperação de dados, use [BACKUP.md](BACKUP.md).
 
+## Canary
+
+O Canary é administrado pela aplicação `canary` no Argo CD. Verifique os
+quatro componentes e o consumo real:
+
+```bash
+kubectl get application canary -n argocd
+kubectl get pods,pvc,svc -n homelab | grep canary
+kubectl top pod -n homelab | grep canary
+kubectl logs -n homelab deploy/canary --tail=200
+kubectl logs -n homelab deploy/canary-myaac --tail=100
+```
+
+Antes de atualizar Canary, MariaDB, datapack ou mapa, faça backup dos dois PVCs.
+O MariaDB está restrito à série 11.4 no manifesto; qualquer mudança major exige
+revisão de compatibilidade e teste de restauração. Ao reconstruir o MyAAC,
+atualize também o digest em `470-canary.yaml`.
+
+O primeiro carregamento baixa aproximadamente 176 MiB de mapa e pode levar
+alguns minutos. Depois de pronto, a mensagem `server online!` aparece no log.
+Avisos sobre geração da documentação Lua ou execução como root não impediram o
+servidor oficial de iniciar, mas devem ser revistos ao criar uma imagem própria.
+
+As portas 7171–7175 e os NodePorts 30086/30088 ficam acessíveis na LAN. Não faça
+redirecionamento no roteador nem crie Ingress público sem antes adicionar
+autenticação, proteção contra abuso, firewall e uma política de atualização.
+
 ## Verificação diária
 
 ```bash

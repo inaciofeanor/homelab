@@ -4,7 +4,7 @@ Este guia instala a stack atual deste repositório em um servidor Linux de nó �
 
 ## O que será instalado
 
-No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), Memos (SQLite), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL) e Actual Budget (SQLite). O Portainer é instalado no namespace `portainer`.
+No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), Memos (SQLite), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL), Actual Budget (SQLite), Home Assistant e Canary (MariaDB, login server e MyAAC). O Portainer é instalado no namespace `portainer`.
 
 Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitoramento (Prometheus, Grafana e Alertmanager) e Argo CD.
 
@@ -255,6 +255,42 @@ kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin validate nd-ly
 Habilite o plugin para todos os usuários e bibliotecas, conceda acesso de
 escrita e mantenha `overwriteLyrics=false`. O manifesto configura a prioridade
 de letras e monta `/music` para escrita.
+### Canary
+
+O manifesto `470-canary.yaml` instala o Canary 3.6.1, MariaDB 11.4, o login
+server e o MyAAC. O acesso inicial é restrito à LAN e não há Ingress público:
+
+| Componente | Endereço |
+| --- | --- |
+| MyAAC | `http://192.168.0.23:30086` |
+| Login HTTP | `http://192.168.0.23:30088` |
+| Login do cliente | `192.168.0.23:7171` |
+| Jogo atual | `192.168.0.23:7172` |
+| Cliente 11.00 | `192.168.0.23:7174` |
+| Cliente 8.60 | `192.168.0.23:7175` |
+
+As contas de teste estão desabilitadas. A conta administrativa do MyAAC é
+`canaryadmin`; a senha gerada fica somente no arquivo local protegido
+`~/.local/state/homelab/canary-credentials.env` e no Sealed Secret. Importe-a
+em um gerenciador de senhas e não versione esse arquivo.
+
+O servidor persiste banco no PVC `canary-db-data` e mapa, configuração e
+datapack no PVC `canary-server-data`. A imagem do MyAAC é construída pelo
+workflow `.github/workflows/canary-myaac-image.yml`; o manifesto usa tag e
+digest imutável. Para editar o jogo, mantenha um fork do Canary, altere C++/Lua
+ou o datapack, publique uma imagem própria e substitua a referência no
+Deployment. Não edite arquivos diretamente dentro do pod.
+
+Valide a implantação com:
+
+```bash
+kubectl rollout status deployment/canary-db -n homelab --timeout=360s
+kubectl rollout status deployment/canary -n homelab --timeout=900s
+kubectl rollout status deployment/canary-login -n homelab --timeout=360s
+kubectl rollout status deployment/canary-myaac -n homelab --timeout=360s
+curl -fsS -o /dev/null http://192.168.0.23:30086/
+```
+
 
 ### Agenda e tarefas no Nextcloud
 
