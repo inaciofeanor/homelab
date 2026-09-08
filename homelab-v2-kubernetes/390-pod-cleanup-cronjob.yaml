@@ -49,7 +49,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: cleanup
-              image: rancher/k3s:v1.35.7-k3s1@sha256:eb7156a0bf9867ffac1afc6d55f453175b2f6c785627b786540df863014a56e7
+              image: rancher/k3s:v1.36.4-k3s1@sha256:edad48e12bf81c3a09ac1c05c0c0ffaaa22145980b989d6fae84543a76b83657
               imagePullPolicy: IfNotPresent
               command:
                 - /bin/sh
