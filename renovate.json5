@@ -76,16 +76,18 @@
     },
     {
       "description": "Manter o MariaDB do Nextcloud na serie 11.8 suportada",
+      "matchManagers": ["kubernetes"],
       "matchDatasources": ["docker"],
       "matchDepNames": ["mariadb"],
-      "matchFileNames": ["homelab-v2-kubernetes/310-nextcloud.yaml"],
+      "matchCurrentValue": "/^11\\.8\\./",
       "allowedVersions": "/^11\\.8\\./"
     },
     {
       "description": "Bloquear upgrades major do MariaDB do Nextcloud",
+      "matchManagers": ["kubernetes"],
       "matchDatasources": ["docker"],
       "matchDepNames": ["mariadb"],
-      "matchFileNames": ["homelab-v2-kubernetes/310-nextcloud.yaml"],
+      "matchCurrentValue": "/^11\\.8\\./",
       "matchUpdateTypes": ["major"],
       "enabled": false
     }
