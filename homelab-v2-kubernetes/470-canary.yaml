@@ -267,6 +267,31 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: configure-status
+          image: mariadb:11.4.13@sha256:611a2fcc5fa7c6ceb8644c6f74b25ede004ff6c3a6b38c8f8c23d3bbf6c26430
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MYSQL_PWD
+              valueFrom:
+                secretKeyRef: {name: canary-secrets, key: DB_PASSWORD}
+          command: [sh, -c]
+          args:
+            - |
+              until mariadb -h canary-db -u canary canary -e "SELECT 1" >/dev/null 2>&1; do
+                sleep 2
+              done
+              mariadb -h canary-db -u canary canary -e "
+                INSERT INTO myaac_settings VALUES
+                  (NULL, 'core', 'status_ip', 'canary-game'),
+                  (NULL, 'core', 'status_port', '7173')
+                ON DUPLICATE KEY UPDATE value = VALUES(value);
+              "
+          resources:
+            requests: {cpu: 5m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 64Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
       containers:
         - name: myaac
           image: ghcr.io/inaciofeanor/homelab-canary-myaac:canary-3.6.1@sha256:40d76f2b472dc772bb2286cf18a69b11e4f35d96fa86b7bb4f9de56093958922
@@ -338,15 +363,32 @@ spec:
     - host: canary.feanor.com.br
       http:
         paths:
-          - path: /login
-            pathType: Exact
-            backend:
-              service:
-                name: canary-login
-                port: {number: 8088}
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: canary-myaac
                 port: {number: 80}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-login
+  namespace: homelab
+  annotations:
+    traefik.ingress.kubernetes.io/router.priority: "100"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [canary.feanor.com.br]
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: canary.feanor.com.br
+      http:
+        paths:
+          - path: /login
+            pathType: Exact
+            backend:
+              service:
+                name: canary-login
+                port: {number: 8088}
