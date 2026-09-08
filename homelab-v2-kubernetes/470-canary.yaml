@@ -287,7 +287,7 @@ spec:
             - {name: CANARY_STATUS_PORT, value: "7173"}
             - {name: CANARY_STATUS_TIMEOUT, value: "5000"}
             - {name: CANARY_DATA_PACK, value: data-otservbr-global}
-            - {name: MYAAC_SITE_URL, value: "http://192.168.0.23:30086"}
+            - {name: MYAAC_SITE_URL, value: "https://canary.feanor.com.br"}
             - {name: MYAAC_ADMIN_ACCOUNT, value: canaryadmin}
             - {name: MYAAC_ADMIN_EMAIL, value: admin@feanor.com.br}
             - name: MYAAC_ADMIN_PASSWORD
@@ -316,3 +316,31 @@ spec:
   selector: {app: canary-myaac}
   ports:
     - {name: http, port: 80, targetPort: http, nodePort: 30086}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: canary-myaac
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Canary"
+    gethomepage.dev/description: "Servidor RPG OpenTibia"
+    gethomepage.dev/group: "Mídia e Jogos"
+    gethomepage.dev/icon: "tibia.png"
+    gethomepage.dev/pod-selector: "app=canary-myaac"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [canary.feanor.com.br]
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: canary.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: canary-myaac
+                port: {number: 80}

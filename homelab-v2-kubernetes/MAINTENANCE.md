@@ -25,9 +25,10 @@ alguns minutos. Depois de pronto, a mensagem `server online!` aparece no log.
 Avisos sobre geração da documentação Lua ou execução como root não impediram o
 servidor oficial de iniciar, mas devem ser revistos ao criar uma imagem própria.
 
-As portas 7171–7175 e os NodePorts 30086/30088 ficam acessíveis na LAN. Não faça
-redirecionamento no roteador nem crie Ingress público sem antes adicionar
-autenticação, proteção contra abuso, firewall e uma política de atualização.
+O MyAAC usa `https://canary.feanor.com.br`; o registro A aponta para
+`192.168.0.23`. As portas 7171–7175 e os NodePorts 30086/30088 continuam
+acessíveis na LAN. Não faça redirecionamento no roteador sem antes adicionar
+proteção contra abuso, firewall e uma política de atualização.
 
 ## Verificação diária
 

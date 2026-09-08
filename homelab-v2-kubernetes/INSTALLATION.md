@@ -209,7 +209,7 @@ IP_DO_SERVIDOR radarr.feanor.com.br legendas.feanor.com.br
 IP_DO_SERVIDOR fotos.feanor.com.br jogos.feanor.com.br home.feanor.com.br
 IP_DO_SERVIDOR tarefas.feanor.com.br automacao.feanor.com.br financas.feanor.com.br diario.feanor.com.br
 IP_DO_SERVIDOR grafana.feanor.com.br prometheus.feanor.com.br alertmanager.feanor.com.br
-IP_DO_SERVIDOR argocd.feanor.com.br
+IP_DO_SERVIDOR argocd.feanor.com.br canary.feanor.com.br
 ```
 
 ## 6. Aplicar a stack
@@ -258,11 +258,12 @@ de letras e monta `/music` para escrita.
 ### Canary
 
 O manifesto `470-canary.yaml` instala o Canary 3.6.1, MariaDB 11.4, o login
-server e o MyAAC. O acesso inicial é restrito à LAN e não há Ingress público:
+server e o MyAAC. O DNS explícito aponta para o IP privado do servidor; o acesso
+fica restrito à LAN ou VPN, mesmo usando HTTPS:
 
 | Componente | Endereço |
 | --- | --- |
-| MyAAC | `http://192.168.0.23:30086` |
+| MyAAC | `https://canary.feanor.com.br` |
 | Login HTTP | `http://192.168.0.23:30088` |
 | Login do cliente | `192.168.0.23:7171` |
 | Jogo atual | `192.168.0.23:7172` |
@@ -288,7 +289,7 @@ kubectl rollout status deployment/canary-db -n homelab --timeout=360s
 kubectl rollout status deployment/canary -n homelab --timeout=900s
 kubectl rollout status deployment/canary-login -n homelab --timeout=360s
 kubectl rollout status deployment/canary-myaac -n homelab --timeout=360s
-curl -fsS -o /dev/null http://192.168.0.23:30086/
+curl -fsS -o /dev/null https://canary.feanor.com.br/
 ```
 
 
@@ -339,6 +340,7 @@ cliente de tarefas compatíveis. No iOS, adicione uma conta CalDAV apontando par
 | Actual Budget | `https://financas.feanor.com.br` |
 | Memos | `https://diario.feanor.com.br` |
 | Home Assistant | `https://casa.feanor.com.br` |
+| Canary | `https://canary.feanor.com.br` |
 
 O SSH do Gitea usa NodePort:
 
