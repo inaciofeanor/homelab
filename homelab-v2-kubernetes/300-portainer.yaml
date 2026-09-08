@@ -56,7 +56,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: portainer
-          image: portainer/portainer-ce:2.39.6@sha256:3fa8750ac2b98ce56784ca292df1adc3ec38f0062fd572811ea4b2221beee310
+          image: portainer/portainer-ce:2.45.0@sha256:511f3f06c96fe3b993ebeaafde311c1959cae73a7ef825dba6397d51b450dffa
           imagePullPolicy: IfNotPresent
           args: ["--bind", ":9000"]
           ports:
