@@ -25,13 +25,6 @@
       "minimumReleaseAge": "3 days"
     },
     {
-      "description": "Manter o MariaDB do Nextcloud na serie 11.8 suportada",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["mariadb"],
-      "matchFileNames": ["homelab-v2-kubernetes/310-nextcloud.yaml"],
-      "allowedVersions": "/^11\\.8\\./"
-    },
-    {
       "description": "Exigir aprovação no dashboard para atualizações major",
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
@@ -80,6 +73,21 @@
       "description": "Agrupar apenas atualizações das actions do próprio workflow",
       "matchManagers": ["github-actions"],
       "groupName": "GitHub Actions"
+    },
+    {
+      "description": "Manter o MariaDB do Nextcloud na serie 11.8 suportada",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["mariadb"],
+      "matchFileNames": ["homelab-v2-kubernetes/310-nextcloud.yaml"],
+      "allowedVersions": "/^11\\.8\\./"
+    },
+    {
+      "description": "Bloquear upgrades major do MariaDB do Nextcloud",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["mariadb"],
+      "matchFileNames": ["homelab-v2-kubernetes/310-nextcloud.yaml"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {
