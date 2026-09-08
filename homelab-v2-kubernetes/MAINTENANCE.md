@@ -68,6 +68,19 @@ kubectl rollout status deployment/DEPLOYMENT -n NAMESPACE --timeout=300s
 ```
 
 Antes de atualizar bancos ou aplicações que armazenam dados, execute um backup. Actual Budget 26.8.0 e Memos usam SQLite e estratégia `Recreate`; não altere para `RollingUpdate`, pois dois pods não devem acessar o mesmo arquivo simultaneamente. Consulte as notas da versão do Actual Budget antes de atualizar e mantenha a imagem fixada por tag e digest.
+### Upgrades major do PostgreSQL
+
+
+O Renovate bloqueia upgrades major automáticos do PostgreSQL do Immich, Vikunja
+e n8n. A troca da tag não migra o diretório de dados: faça dump lógico, restaure
+em um PVC vazio com a nova major e valide a aplicação antes de descartar o PVC
+anterior. Os deployments dos bancos usam `Recreate` para impedir acesso
+simultâneo ao PVC.
+
+No PostgreSQL 18, revise também o novo layout de `PGDATA`: o volume passa a ser
+montado em `/var/lib/postgresql`, com os dados em um subdiretório específico da
+major. Nunca aponte diretamente a imagem 18 para o PVC 17 atual.
+
 
 ### Atualizar o RomM
 

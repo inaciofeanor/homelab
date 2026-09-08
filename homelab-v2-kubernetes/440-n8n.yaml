@@ -21,6 +21,8 @@ kind: Deployment
 metadata: {name: n8n-db, namespace: homelab}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels: {app: n8n-db}
   template:

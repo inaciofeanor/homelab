@@ -90,6 +90,40 @@
       "matchCurrentValue": "/^11\\.8\\./",
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "Manter o PostgreSQL do Immich na major atual",
+      "matchManagers": ["kubernetes"],
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["ghcr.io/immich-app/postgres"],
+      "matchCurrentValue": "/^14-/",
+      "allowedVersions": "/^14-/"
+    },
+    {
+      "description": "Bloquear upgrades major do PostgreSQL do Immich",
+      "matchManagers": ["kubernetes"],
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["ghcr.io/immich-app/postgres"],
+      "matchCurrentValue": "/^14-/",
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Manter PostgreSQL do Vikunja e n8n na major 17",
+      "matchManagers": ["kubernetes"],
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["postgres"],
+      "matchCurrentValue": "/^17\\./",
+      "allowedVersions": "/^17\\./"
+    },
+    {
+      "description": "Bloquear upgrades major do PostgreSQL do Vikunja e n8n",
+      "matchManagers": ["kubernetes"],
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["postgres"],
+      "matchCurrentValue": "/^17\\./",
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {
