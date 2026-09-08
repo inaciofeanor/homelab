@@ -22,6 +22,26 @@ jobs:
           ref: d618a61ab880eca6b28ab48caef8409737e59537
           path: canary
 
+      - name: Corrigir leitura da porta de status
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          dockerfile = Path("canary/docker/quickstart/myaac/Dockerfile")
+          content = dockerfile.read_text()
+          marker = "COPY --from=builder /var/www/html /var/www/html\n"
+          fix = r"""
+
+          # MyAAC tipa status_port como inteiro, mas a versão fixada testa o
+          # valor como array e recua incorretamente para a porta 7171.
+          RUN sed -i 's/if(isset($settingPort\[0\]))/if($settingPort !== null \&\& $settingPort !== "")/' /var/www/html/system/status.php
+          """
+          if marker not in content:
+              raise SystemExit("Ponto de correção não encontrado no Dockerfile")
+          dockerfile.write_text(content.replace(marker, marker + fix, 1))
+          PY
+
       - name: Login no GHCR
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
@@ -41,6 +61,6 @@ jobs:
           push: true
           build-args: |
             MYAAC_REF=944d8852b4904b530b1cdfa960f2c69546573562
-          tags: ghcr.io/inaciofeanor/homelab-canary-myaac:canary-3.6.1
+          tags: ghcr.io/inaciofeanor/homelab-canary-myaac:canary-3.6.1-r1
           provenance: true
           sbom: true
