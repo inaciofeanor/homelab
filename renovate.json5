@@ -25,6 +25,13 @@
       "minimumReleaseAge": "3 days"
     },
     {
+      "description": "Manter o MariaDB do Nextcloud na serie 11.8 suportada",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["mariadb"],
+      "matchFileNames": ["homelab-v2-kubernetes/310-nextcloud.yaml"],
+      "allowedVersions": "/^11\\.8\\./"
+    },
+    {
       "description": "Exigir aprovação no dashboard para atualizações major",
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true

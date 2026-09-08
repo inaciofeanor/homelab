@@ -79,6 +79,11 @@ integrar um PR:
 4. integre em `dev` e acompanhe o rollout e a saúde no Argo CD;
 5. promova para `main` somente após testar a aplicação.
 
+
+O MariaDB do Nextcloud fica restrito à série `11.8.x`, suportada pelo
+Nextcloud 34. O Renovate pode propor patches dessa série, mas não deve abrir
+atualizações para MariaDB 12 enquanto ele estiver fora da matriz suportada.
+
 Não integre em lote o PR inicial de pinagem sem revisar cada imagem. Atualizações
 major exigem aprovação no Dependency Dashboard e nenhum PR usa automerge.
 As demais atualizações de versão aguardam três dias após a publicação. Trocas
