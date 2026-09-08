@@ -294,7 +294,7 @@ spec:
             allowPrivilegeEscalation: false
       containers:
         - name: myaac
-          image: ghcr.io/inaciofeanor/homelab-canary-myaac:canary-3.6.1@sha256:40d76f2b472dc772bb2286cf18a69b11e4f35d96fa86b7bb4f9de56093958922
+          image: ghcr.io/inaciofeanor/homelab-canary-myaac:canary-3.6.1-r1@sha256:45699f4130fa4ef252fa79b3f6537e03141ca09eb1b895692444adb7f3cc2bd7
           imagePullPolicy: IfNotPresent
           env:
             - {name: CANARY_DB_HOST, value: canary-db}
