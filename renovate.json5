@@ -92,36 +92,16 @@
       "enabled": false
     },
     {
-      "description": "Manter o PostgreSQL do Immich na major atual",
+      "description": "Bloquear upgrades major no manifesto do Immich",
       "matchManagers": ["kubernetes"],
-      "matchDatasources": ["docker"],
-      "matchDepNames": ["ghcr.io/immich-app/postgres"],
-      "matchCurrentValue": "/^14-/",
-      "allowedVersions": "/^14-/"
-    },
-    {
-      "description": "Bloquear upgrades major do PostgreSQL do Immich",
-      "matchManagers": ["kubernetes"],
-      "matchDatasources": ["docker"],
-      "matchDepNames": ["ghcr.io/immich-app/postgres"],
-      "matchCurrentValue": "/^14-/",
+      "matchFileNames": ["**/400-immich.yaml"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     },
     {
-      "description": "Manter PostgreSQL do Vikunja e n8n na major 17",
+      "description": "Bloquear upgrades major nos manifestos do Vikunja e n8n",
       "matchManagers": ["kubernetes"],
-      "matchDatasources": ["docker"],
-      "matchDepNames": ["postgres"],
-      "matchCurrentValue": "/^17\\./",
-      "allowedVersions": "/^17\\./"
-    },
-    {
-      "description": "Bloquear upgrades major do PostgreSQL do Vikunja e n8n",
-      "matchManagers": ["kubernetes"],
-      "matchDatasources": ["docker"],
-      "matchDepNames": ["postgres"],
-      "matchCurrentValue": "/^17\\./",
+      "matchFileNames": ["**/430-vikunja.yaml", "**/440-n8n.yaml"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     }
