@@ -4,7 +4,7 @@ Este guia instala a stack atual deste repositório em um servidor Linux de nó �
 
 ## O que será instalado
 
-No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), Memos (SQLite), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL), Actual Budget (SQLite), Home Assistant e rAthena (MariaDB e FluxCP). O Portainer é instalado no namespace `portainer`.
+No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), Memos (SQLite), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL), Actual Budget (SQLite) e Home Assistant. O Portainer é instalado no namespace `portainer`.
 
 Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitoramento (Prometheus, Grafana e Alertmanager) e Argo CD.
 
@@ -209,7 +209,7 @@ IP_DO_SERVIDOR radarr.feanor.com.br legendas.feanor.com.br
 IP_DO_SERVIDOR fotos.feanor.com.br jogos.feanor.com.br home.feanor.com.br
 IP_DO_SERVIDOR tarefas.feanor.com.br automacao.feanor.com.br financas.feanor.com.br diario.feanor.com.br
 IP_DO_SERVIDOR grafana.feanor.com.br prometheus.feanor.com.br alertmanager.feanor.com.br
-IP_DO_SERVIDOR argocd.feanor.com.br ragnarok.feanor.com.br
+IP_DO_SERVIDOR argocd.feanor.com.br
 ```
 
 ## 6. Aplicar a stack
@@ -255,46 +255,6 @@ kubectl exec -n homelab deploy/navidrome -- /app/navidrome plugin validate nd-ly
 Habilite o plugin para todos os usuários e bibliotecas, conceda acesso de
 escrita e mantenha `overwriteLyrics=false`. O manifesto configura a prioridade
 de letras e monta `/music` para escrita.
-### rAthena e FluxCP
-
-O manifesto `470-rathena.yaml` instala rAthena em modo Renewal, MariaDB 11.4
-e FluxCP. O painel usa HTTPS, mas as portas do jogo ficam acessíveis apenas na
-LAN ou VPN:
-
-| Componente | Endereço |
-| --- | --- |
-| FluxCP | `https://ragnarok.feanor.com.br` |
-| Login do cliente | `192.168.0.23:6900` |
-| Character server | `192.168.0.23:6121` |
-| Map server | `192.168.0.23:5121` |
-
-A imagem está compilada com `PACKETVER=20211103`; use um executável kRO
-compatível com essa data e configure o `clientinfo.xml` com o host
-`192.168.0.23` e a porta `6900`. O servidor não cria contas pelo sufixo
-`_M/_F`; registre a conta no FluxCP.
-
-No primeiro acesso, abra o FluxCP e conclua o instalador. A senha do instalador
-fica somente em
-`~/.local/state/homelab/rathena-credentials.env` e no Sealed Secret. Depois,
-registre uma conta; para torná-la administradora, altere o `group_id` no banco
-de forma deliberada e remova o acesso ao instalador.
-
-O MariaDB persiste no PVC `rathena-db-data`. O código e as configurações são
-reproduzíveis a partir de `containers/rathena`, `containers/fluxcp` e do
-workflow `.github/workflows/rathena-images.yml`. Alterações do jogo devem ser
-versionadas e incorporadas à imagem, nunca feitas diretamente no pod.
-
-Valide a implantação com:
-
-```bash
-kubectl rollout status deployment/rathena-db -n homelab --timeout=360s
-kubectl rollout status deployment/rathena -n homelab --timeout=900s
-kubectl rollout status deployment/fluxcp -n homelab --timeout=360s
-curl -fsS -o /dev/null https://ragnarok.feanor.com.br/
-nc -vz 192.168.0.23 6900
-```
-
-
 ### Agenda e tarefas no Nextcloud
 
 Depois que o Nextcloud estiver instalado e saudável, instale os aplicativos
@@ -342,7 +302,6 @@ cliente de tarefas compatíveis. No iOS, adicione uma conta CalDAV apontando par
 | Actual Budget | `https://financas.feanor.com.br` |
 | Memos | `https://diario.feanor.com.br` |
 | Home Assistant | `https://casa.feanor.com.br` |
-| rAthena/FluxCP | `https://ragnarok.feanor.com.br` |
 
 O SSH do Gitea usa NodePort:
 

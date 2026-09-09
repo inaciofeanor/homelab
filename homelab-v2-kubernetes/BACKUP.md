@@ -18,10 +18,6 @@ O plugin `nd-lyrics` e suas configurações ficam no PVC `navidrome-data` e entr
 no backup normal de PVCs. As letras geradas ficam ao lado das músicas no
 `hostPath`; elas só entram no backup geral quando `--include-hostpaths` é usado
 ou quando a biblioteca musical é copiada por outro processo.
-O rAthena e o FluxCP são cobertos pelo backup frio geral por meio do PVC
-`rathena-db-data`. Código, configuração e imagens são reconstruídos pelo Git;
-personagens, contas, logs e dados do FluxCP ficam no MariaDB.
-
 O PVC `home-assistant-data` contém `configuration.yaml`, `.storage`, o banco SQLite padrão e eventuais backups locais. O backup frio inclui todo o `/config` com o banco consistente, pois interrompe o k3s durante a cópia.
 
 O backup contém senhas e outros dados privados. Guarde-o em disco criptografado e
@@ -182,20 +178,4 @@ CRON_TZ=America/Sao_Paulo
 O ZIP contém dados sensíveis, inclusive a configuração de conexão com o banco.
 O cron de root não precisa de `sudo`. Monitore o arquivo de log e o espaço livre;
 este script deliberadamente não remove backups antigos automaticamente.
-
-### Backup diário do rAthena no WSL
-
-O script `tools/backup-rathena-to-google-drive.sh` cria um dump transacional
-do MariaDB compartilhado pelo rAthena e FluxCP, valida o gzip, grava checksum
-SHA-256 e mantém 14 dias. Código e configuração permanecem no Git e não são
-duplicados no arquivo.
-
-Agende depois dos demais bancos:
-
-```cron
-CRON_TZ=America/Sao_Paulo
-0 18 * * * /home/SEU_USUARIO/git/homelab/tools/backup-rathena-to-google-drive.sh >> "/mnt/d/Google Drive/Backups/cron-rathena.log" 2>&1
-```
-
-Após a primeira execução, faça ao menos um teste de restauração em um MariaDB
 

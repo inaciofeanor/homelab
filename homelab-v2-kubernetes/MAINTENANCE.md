@@ -2,38 +2,6 @@
 
 Este guia reúne as rotinas operacionais do homelab. Para construir ou reconstruir o servidor, use [INSTALLATION.md](INSTALLATION.md). Para recuperação de dados, use [BACKUP.md](BACKUP.md).
 
-## rAthena
-
-O rAthena é administrado pela aplicação `rathena` no Argo CD. Verifique os
-quatro componentes e o consumo real:
-
-```bash
-kubectl get application rathena -n argocd
-kubectl get pods,pvc,svc -n homelab | grep -E 'rathena|fluxcp'
-kubectl top pod -n homelab | grep -E 'rathena|fluxcp'
-kubectl logs -n homelab deploy/rathena --tail=200
-kubectl logs -n homelab deploy/fluxcp --tail=100
-```
-
-Antes de atualizar rAthena, FluxCP ou MariaDB, execute
-`tools/backup-rathena-to-google-drive.sh` e teste o arquivo com `gzip -t`.
-O MariaDB está restrito à série 11.4; mudanças major exigem restauração em um
-PVC novo. As imagens próprias são construídas pelo workflow
-`.github/workflows/rathena-images.yml` a partir de commits imutáveis.
-
-O servidor usa modo Renewal e `PACKETVER=20211103`. Ao trocar a versão do
-cliente, altere `PACKETVER`, reconstrua a imagem e atualize o digest do
-manifesto na mesma mudança. Cliente e servidor com datas diferentes não são
-compatíveis.
-
-O FluxCP usa `https://ragnarok.feanor.com.br`. O cliente conecta inicialmente
-em `192.168.0.23:6900`; as portas 6121 e 5121 também são anunciadas pelo
-servidor e permanecem restritas à LAN. Não faça redirecionamento dessas portas
-no roteador sem firewall, mitigação de abuso e política de atualização.
-
-Personalizações devem ser versionadas em `containers/rathena` ou em um fork
-fixado do projeto oficial. Não edite o sistema de arquivos efêmero do pod.
-
 ## Verificação diária
 
 ```bash

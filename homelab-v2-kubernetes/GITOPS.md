@@ -4,11 +4,6 @@ O Argo CD é instalado pelo chart Helm `argo/argo-cd`, fixado na versão `10.4.0
 (Argo CD `v3.5.1`). O manifesto `901-argocd-applications.yaml` cria uma
 `Application` para cada serviço e acompanha a branch `dev`.
 
-O ApplicationSet apresenta cada serviço separadamente no Argo CD. O rAthena
-aparece como a aplicação `rathena` e reúne somente
-`160-rathena-sealed-secret.yaml` e `470-rathena.yaml`; alterações nesses
-arquivos não ficam misturadas com as demais aplicações.
-
 A `Application` `homelab-apps` controla somente o `AppProject` e o
 `ApplicationSet`. Na tela inicial, Nextcloud, Immich, Home Assistant e os
 demais serviços aparecem separadamente. Recursos compartilhados também aparecem

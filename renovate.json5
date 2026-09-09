@@ -105,13 +105,6 @@
       "matchFileNames": ["**/430-vikunja.yaml", "**/440-n8n.yaml"],
       "matchUpdateTypes": ["major"],
       "enabled": false
-    },
-    {
-      "description": "Bloquear upgrades major no MariaDB do rAthena",
-      "matchManagers": ["kubernetes"],
-      "matchFileNames": ["**/470-rathena.yaml"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {

@@ -7,10 +7,6 @@ Stack de nó único baseada em k3s e Traefik. Os manifests em `homelab-v2-kubern
 - [Instalação](INSTALLATION.md): preparação de uma máquina nova, k3s, controllers, secrets, certificados, DNS e implantação da stack.
 - [Manutenção](MAINTENANCE.md): verificações diárias, atualização, diagnóstico, monitoramento, certificados, rotação de secrets e Argo CD.
 - [GitOps com Argo CD](GITOPS.md): bootstrap, sincronização automática, PRs de atualização do Renovate e recuperação.
-O rAthena oferece um servidor Ragnarok Online editável em modo Renewal,
-com painel FluxCP em `https://ragnarok.feanor.com.br` e `PACKETVER`
-`20211103`.
-
 - [Backup e restauração](BACKUP.md): cópia fria dos PVCs, bibliotecas em `hostPath` e recuperação em outra máquina.
 
 O Home Assistant é executado como Container, com dados persistentes em PVC e acesso em `https://casa.feanor.com.br`.
