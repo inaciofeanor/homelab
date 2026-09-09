@@ -33,7 +33,7 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: database-schema
-          image: ghcr.io/inaciofeanor/homelab-rathena:packetver-20211103@sha256:4a76a0b1f82d72e9571f3e8203e6ababf882582969b7dd87c5d6cb08e35f599f
+          image: ghcr.io/inaciofeanor/homelab-rathena:packetver-20211103@sha256:da9c576ee4f353cc3a3b4e80d7ab83126b5dc9d1ac8c90e5defaccea6c9b0fa1
           imagePullPolicy: IfNotPresent
           command: [sh, -ec]
           args:
@@ -116,7 +116,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: rathena
-          image: ghcr.io/inaciofeanor/homelab-rathena:packetver-20211103@sha256:4a76a0b1f82d72e9571f3e8203e6ababf882582969b7dd87c5d6cb08e35f599f
+          image: ghcr.io/inaciofeanor/homelab-rathena:packetver-20211103@sha256:da9c576ee4f353cc3a3b4e80d7ab83126b5dc9d1ac8c90e5defaccea6c9b0fa1
           imagePullPolicy: IfNotPresent
           env:
             - {name: DB_HOST, value: rathena-db}
