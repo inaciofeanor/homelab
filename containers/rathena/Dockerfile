@@ -1,4 +1,4 @@
-FROM alpine:3.23 AS builder
+FROM alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40 AS builder
 
 ARG RATHENA_REF=e985006171d2eb320ee512a653f4c83aea3d81b6
 ARG PACKETVER=20211103
@@ -10,7 +10,7 @@ RUN git clone https://github.com/rathena/rathena.git . \
  && ./configure --enable-packetver="${PACKETVER}" \
  && make -j"$(nproc)" server
 
-FROM alpine:3.23
+FROM alpine:3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40
 
 RUN apk add --no-cache bash ca-certificates libstdc++ mariadb-client mariadb-connector-c zlib \
  && addgroup -g 10001 rathena \
