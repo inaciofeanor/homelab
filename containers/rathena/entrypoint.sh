@@ -75,7 +75,9 @@ terminate() {
 }
 trap terminate TERM INT
 
+set +e
 wait -n "${login_pid}" "${char_pid}" "${map_pid}"
 status=$?
+set -e
 terminate
 exit "${status}"
