@@ -189,7 +189,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: fluxcp
-          image: ghcr.io/inaciofeanor/homelab-fluxcp:master-20260908@sha256:faf762a1661a56fcbba6946d43d620bb4c9e30a77a227dd351362e3e7f5d6a37
+          image: ghcr.io/inaciofeanor/homelab-fluxcp:master-20260908-r1@sha256:efdaa0d4a8579f48a984f2d8630070bbe83ad25daea9a60aea6a95e96f4285fd
           imagePullPolicy: IfNotPresent
           env:
             - {name: DB_HOST, value: rathena-db}
