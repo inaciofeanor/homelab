@@ -1,0 +1,62 @@
+name: Build rAthena and FluxCP
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+    paths:
+      - ".github/workflows/rathena-images.yml"
+      - "containers/rathena/**"
+      - "containers/fluxcp/**"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  RATHENA_REF: e985006171d2eb320ee512a653f4c83aea3d81b6
+  FLUXCP_REF: 98cd4b8fd83228c11b36fb3d097b8e0f7c105a8d
+  PACKETVER: "20211103"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: rathena
+            context: containers/rathena
+            image: homelab-rathena
+            tag: packetver-20211103
+          - name: fluxcp
+            context: containers/fluxcp
+            image: homelab-fluxcp
+            tag: master-20260908
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Login no GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Construir e publicar ${{ matrix.name }}
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: ${{ matrix.context }}
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            RATHENA_REF=${{ env.RATHENA_REF }}
+            FLUXCP_REF=${{ env.FLUXCP_REF }}
+            PACKETVER=${{ env.PACKETVER }}
+          tags: ghcr.io/inaciofeanor/${{ matrix.image }}:${{ matrix.tag }}
+          provenance: true
+          sbom: true
