@@ -107,9 +107,9 @@
       "enabled": false
     },
     {
-      "description": "Bloquear upgrades major no MariaDB do Canary",
+      "description": "Bloquear upgrades major no MariaDB do rAthena",
       "matchManagers": ["kubernetes"],
-      "matchFileNames": ["**/470-canary.yaml"],
+      "matchFileNames": ["**/470-rathena.yaml"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     }

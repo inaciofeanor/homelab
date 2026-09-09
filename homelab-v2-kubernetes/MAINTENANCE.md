@@ -2,39 +2,37 @@
 
 Este guia reúne as rotinas operacionais do homelab. Para construir ou reconstruir o servidor, use [INSTALLATION.md](INSTALLATION.md). Para recuperação de dados, use [BACKUP.md](BACKUP.md).
 
-## Canary
+## rAthena
 
-O Canary é administrado pela aplicação `canary` no Argo CD. Verifique os
+O rAthena é administrado pela aplicação `rathena` no Argo CD. Verifique os
 quatro componentes e o consumo real:
 
 ```bash
-kubectl get application canary -n argocd
-kubectl get pods,pvc,svc -n homelab | grep canary
-kubectl top pod -n homelab | grep canary
-kubectl logs -n homelab deploy/canary --tail=200
-kubectl logs -n homelab deploy/canary-myaac --tail=100
+kubectl get application rathena -n argocd
+kubectl get pods,pvc,svc -n homelab | grep -E 'rathena|fluxcp'
+kubectl top pod -n homelab | grep -E 'rathena|fluxcp'
+kubectl logs -n homelab deploy/rathena --tail=200
+kubectl logs -n homelab deploy/fluxcp --tail=100
 ```
 
-Antes de atualizar Canary, MariaDB, datapack ou mapa, faça backup dos dois PVCs.
-O MariaDB está restrito à série 11.4 no manifesto; qualquer mudança major exige
-revisão de compatibilidade e teste de restauração. Ao reconstruir o MyAAC,
-atualize também o digest em `470-canary.yaml`.
+Antes de atualizar rAthena, FluxCP ou MariaDB, execute
+`tools/backup-rathena-to-google-drive.sh` e teste o arquivo com `gzip -t`.
+O MariaDB está restrito à série 11.4; mudanças major exigem restauração em um
+PVC novo. As imagens próprias são construídas pelo workflow
+`.github/workflows/rathena-images.yml` a partir de commits imutáveis.
 
-O primeiro carregamento baixa aproximadamente 176 MiB de mapa e pode levar
-alguns minutos. Depois de pronto, a mensagem `server online!` aparece no log.
-Avisos sobre geração da documentação Lua ou execução como root não impediram o
-servidor oficial de iniciar, mas devem ser revistos ao criar uma imagem própria.
+O servidor usa modo Renewal e `PACKETVER=20211103`. Ao trocar a versão do
+cliente, altere `PACKETVER`, reconstrua a imagem e atualize o digest do
+manifesto na mesma mudança. Cliente e servidor com datas diferentes não são
+compatíveis.
 
-O MyAAC usa `https://canary.feanor.com.br`; o registro A aponta para
-`192.168.0.23`. As portas 7171–7175 e os NodePorts 30086/30088 continuam
-acessíveis na LAN. Não faça redirecionamento no roteador sem antes adicionar
-proteção contra abuso, firewall e uma política de atualização.
+O FluxCP usa `https://ragnarok.feanor.com.br`. O cliente conecta inicialmente
+em `192.168.0.23:6900`; as portas 6121 e 5121 também são anunciadas pelo
+servidor e permanecem restritas à LAN. Não faça redirecionamento dessas portas
+no roteador sem firewall, mitigação de abuso e política de atualização.
 
-O status exibido pelo MyAAC usa `canary-game:7173` dentro do cluster. O login
-HTTP usa `https://canary.feanor.com.br/login` e deve aparecer nos logs de
-`deployment/canary-login`. Se o site estiver online, mas o cliente não
-autenticar, confirme primeiro que ele está configurado com esse endpoint e que
-está enviando o e-mail da conta, não o nome do personagem.
+Personalizações devem ser versionadas em `containers/rathena` ou em um fork
+fixado do projeto oficial. Não edite o sistema de arquivos efêmero do pod.
 
 ## Verificação diária
 

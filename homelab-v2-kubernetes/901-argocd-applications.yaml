@@ -86,8 +86,8 @@ spec:
             include: 390-pod-cleanup-cronjob.yaml
           - name: immich
             include: 400-immich.yaml
-          - name: canary
-            include: "{160-canary-sealed-secret.yaml,470-canary.yaml}"
+          - name: rathena
+            include: "{160-rathena-sealed-secret.yaml,470-rathena.yaml}"
           - name: memos
             include: 410-memos.yaml
           - name: romm

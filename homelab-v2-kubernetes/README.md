@@ -7,8 +7,9 @@ Stack de nó único baseada em k3s e Traefik. Os manifests em `homelab-v2-kubern
 - [Instalação](INSTALLATION.md): preparação de uma máquina nova, k3s, controllers, secrets, certificados, DNS e implantação da stack.
 - [Manutenção](MAINTENANCE.md): verificações diárias, atualização, diagnóstico, monitoramento, certificados, rotação de secrets e Argo CD.
 - [GitOps com Argo CD](GITOPS.md): bootstrap, sincronização automática, PRs de atualização do Renovate e recuperação.
-O Canary 3.6.1 oferece um servidor OpenTibia editável, com MyAAC em
-`https://canary.feanor.com.br` e login server separado.
+O rAthena oferece um servidor Ragnarok Online editável em modo Renewal,
+com painel FluxCP em `https://ragnarok.feanor.com.br` e `PACKETVER`
+`20211103`.
 
 - [Backup e restauração](BACKUP.md): cópia fria dos PVCs, bibliotecas em `hostPath` e recuperação em outra máquina.
 
