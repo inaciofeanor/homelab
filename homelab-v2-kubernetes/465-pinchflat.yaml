@@ -1,0 +1,133 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pinchflat-config
+  namespace: homelab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinchflat
+  namespace: homelab
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pinchflat
+  template:
+    metadata:
+      labels:
+        app: pinchflat
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: prepare-downloads
+          image: ghcr.io/kieraneglin/pinchflat@sha256:01b4f98aabaf3f5fe394213f7a32578c9e84e42080f52e2f8334021a4473b202
+          command: [sh, -ec]
+          args: ["mkdir -p /downloads && chown 1000:1000 /downloads"]
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+          resources:
+            requests: {cpu: 5m, memory: 16Mi}
+            limits: {cpu: 50m, memory: 64Mi}
+          volumeMounts:
+            - {name: downloads, mountPath: /downloads}
+      containers:
+        - name: pinchflat
+          image: ghcr.io/kieraneglin/pinchflat@sha256:01b4f98aabaf3f5fe394213f7a32578c9e84e42080f52e2f8334021a4473b202
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: TZ, value: America/Sao_Paulo}
+            - {name: LOG_LEVEL, value: info}
+            - {name: UMASK, value: "002"}
+            - {name: YT_DLP_WORKER_CONCURRENCY, value: "1"}
+            - name: BASIC_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef: {name: pinchflat-secrets, key: BASIC_AUTH_USERNAME}
+            - name: BASIC_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: pinchflat-secrets, key: BASIC_AUTH_PASSWORD}
+          ports:
+            - {name: http, containerPort: 8945}
+          resources:
+            requests: {cpu: 50m, memory: 256Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          startupProbe:
+            httpGet: {path: /healthcheck, port: http}
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /healthcheck, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /healthcheck, port: http}
+            periodSeconds: 30
+          volumeMounts:
+            - {name: config, mountPath: /config}
+            - {name: downloads, mountPath: /downloads}
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: pinchflat-config
+        - name: downloads
+          hostPath:
+            path: /mnt/dados-jellyfin/media/youtube
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinchflat
+  namespace: homelab
+spec:
+  selector:
+    app: pinchflat
+  ports:
+    - {name: http, port: 8945, targetPort: http}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pinchflat
+  namespace: homelab
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Pinchflat
+    gethomepage.dev/description: Downloads do YouTube
+    gethomepage.dev/group: "Mídia e Jogos"
+    gethomepage.dev/icon: pinchflat.png
+    gethomepage.dev/pod-selector: app=pinchflat
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [youtube.feanor.com.br]
+      secretName: feanor-wildcard-tls
+  rules:
+    - host: youtube.feanor.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pinchflat
+                port: {number: 8945}

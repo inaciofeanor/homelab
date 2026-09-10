@@ -113,6 +113,21 @@ kubectl top pod -n homelab -l app=home-assistant
 
 A imagem é fixada por versão e digest em `460-home-assistant.yaml`. Faça backup do PVC antes de atualizar. O `ConfigMap` só inicia a configuração; alterações posteriores em `/config/configuration.yaml` permanecem no PVC. Esta instalação não possui Supervisor: mantenha dependências como MQTT em serviços separados.
 
+### Manutenção do Pinchflat
+
+```bash
+kubectl get deployment/pinchflat service/pinchflat ingress/pinchflat pvc/pinchflat-config -n homelab
+kubectl logs -n homelab deployment/pinchflat --tail=200
+kubectl exec -n homelab deploy/pinchflat -- test -w /downloads
+kubectl exec -n homelab deploy/jellyfin -- test -d /media/youtube
+curl -fsS https://youtube.feanor.com.br/healthcheck
+```
+
+O Pinchflat deve ser o único processo com escrita na pasta de downloads; o
+Jellyfin a consome pelo mount somente leitura de `/media`. Antes de atualizar,
+faça backup do PVC `pinchflat-config`. Inclua os `hostPath` para preservar
+também os vídeos baixados.
+
 ## Atualizações automáticas de imagens
 
 O workflow `.github/workflows/renovate.yml` executa o Renovate diariamente às

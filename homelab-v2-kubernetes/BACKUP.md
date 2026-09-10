@@ -19,6 +19,10 @@ no backup normal de PVCs. As letras geradas ficam ao lado das músicas no
 `hostPath`; elas só entram no backup geral quando `--include-hostpaths` é usado
 ou quando a biblioteca musical é copiada por outro processo.
 O PVC `home-assistant-data` contém `configuration.yaml`, `.storage`, o banco SQLite padrão e eventuais backups locais. O backup frio inclui todo o `/config` com o banco consistente, pois interrompe o k3s durante a cópia.
+O PVC `pinchflat-config` contém a configuração, as fontes e o banco SQLite do
+Pinchflat e entra no backup normal. Os vídeos baixados ficam em
+`/mnt/dados-jellyfin/media/youtube`; por estarem dentro da biblioteca de mídia,
+só entram no backup geral quando `--include-hostpaths` é usado.
 
 O backup contém senhas e outros dados privados. Guarde-o em disco criptografado e
 mantenha pelo menos uma segunda cópia desconectada ou fora de casa. Um backup no

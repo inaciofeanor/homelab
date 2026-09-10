@@ -2,7 +2,7 @@
 # Esses diretórios só entram no backup com --include-hostpaths.
 HOST_PATHS="
 /mnt/dados-homelab-novo/ebooks
-/mnt/dados-homelab-novo/media
+/mnt/dados-jellyfin/media
 /mnt/dados-homelab-novo/music
 /mnt/dados-homelab-novo/photos
 /mnt/dados-homelab-novo/roms

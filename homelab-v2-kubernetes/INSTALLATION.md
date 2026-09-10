@@ -4,7 +4,7 @@ Este guia instala a stack atual deste repositório em um servidor Linux de nó �
 
 ## O que será instalado
 
-No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), Memos (SQLite), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL), Actual Budget (SQLite) e Home Assistant. O Portainer é instalado no namespace `portainer`.
+No namespace `homelab`: Nextcloud (MariaDB e Redis), Gitea, Navidrome, Kavita, Jellyfin, Pinchflat, Radarr, Bazarr, Homepage, Immich (Postgres, Valkey e machine learning), Memos (SQLite), RomM (MariaDB), Vikunja (PostgreSQL), n8n (PostgreSQL), Actual Budget (SQLite) e Home Assistant. O Portainer é instalado no namespace `portainer`.
 
 Opcionalmente, o procedimento também cobre cert-manager/Let's Encrypt, monitoramento (Prometheus, Grafana e Alertmanager) e Argo CD.
 
@@ -74,13 +74,14 @@ O disco dedicado de mídia deve ser persistido no `/etc/fstab`. Para o disco ide
 LABEL=jellyfin-filmes /mnt/dados-jellyfin ext4 defaults,nofail 0 2
 ```
 
-Depois de executar `sudo mount -a`, crie `/mnt/dados-jellyfin/media` com UID e GID `1000`.
+Depois de executar `sudo mount -a`, crie `/mnt/dados-jellyfin/media/youtube` com UID e GID `1000`.
 
 | Serviço | Manifesto | Caminho de mídia |
 | --- | --- | --- |
 | Navidrome | `330-navidrome.yaml` | `/mnt/dados-homelab-novo/music` |
 | Kavita | `350-kavita.yaml` | `/mnt/dados-homelab-novo/ebooks` |
 | Jellyfin | `360-jellyfin.yaml` | `/mnt/dados-jellyfin/media` |
+| Pinchflat | `465-pinchflat.yaml` | `/mnt/dados-jellyfin/media/youtube` |
 | Radarr e Bazarr | `370-radarr-bazarr.yaml` | `/mnt/dados-jellyfin/media` |
 | Immich | `400-immich.yaml` | `/mnt/dados-homelab-novo/photos` |
 | RomM | `420-romm.yaml` | caminho configurado no `hostPath` do manifesto |
@@ -208,6 +209,7 @@ IP_DO_SERVIDOR portainer.feanor.com.br ebooks.feanor.com.br filmes.feanor.com.br
 IP_DO_SERVIDOR radarr.feanor.com.br legendas.feanor.com.br
 IP_DO_SERVIDOR fotos.feanor.com.br jogos.feanor.com.br home.feanor.com.br
 IP_DO_SERVIDOR tarefas.feanor.com.br automacao.feanor.com.br financas.feanor.com.br diario.feanor.com.br
+IP_DO_SERVIDOR casa.feanor.com.br youtube.feanor.com.br
 IP_DO_SERVIDOR grafana.feanor.com.br prometheus.feanor.com.br alertmanager.feanor.com.br
 IP_DO_SERVIDOR argocd.feanor.com.br
 ```
@@ -293,6 +295,7 @@ cliente de tarefas compatíveis. No iOS, adicione uma conta CalDAV apontando par
 | Portainer | `https://portainer.feanor.com.br` |
 | Kavita | `https://ebooks.feanor.com.br` |
 | Jellyfin | `https://filmes.feanor.com.br` |
+| Pinchflat | `https://youtube.feanor.com.br` |
 | Radarr | `https://radarr.feanor.com.br` |
 | Bazarr | `https://legendas.feanor.com.br` |
 | Immich | `https://fotos.feanor.com.br` |
@@ -362,6 +365,29 @@ curl -fsS -o /dev/null https://casa.feanor.com.br/
 
 O contêiner não recebe acesso privilegiado nem dispositivos USB/Bluetooth. Para Zigbee, Z-Wave ou Bluetooth, mapeie somente o dispositivo necessário e reavalie o contexto de segurança.
 O script de backup geral inclui o banco SQLite e os anexos armazenados nesse PVC automaticamente.
+
+### Pinchflat e biblioteca do Jellyfin
+
+O Pinchflat usa o manifesto `465-pinchflat.yaml`. Sua configuração e o banco
+SQLite ficam no PVC `pinchflat-config`; os vídeos são gravados em
+`/mnt/dados-jellyfin/media/youtube`, montado como `/downloads`. O Jellyfin
+enxerga o mesmo conteúdo em `/media/youtube`, somente para leitura.
+
+O acesso a `https://youtube.feanor.com.br` exige autenticação básica. No servidor
+atual, as credenciais administrativas geradas durante a implantação ficam fora do
+Git, em `~/.local/state/homelab/pinchflat-credentials.env`, com modo `0600`.
+Depois do primeiro acesso, crie as fontes de canais ou playlists e use um perfil
+de mídia compatível com Jellyfin, mantendo metadados NFO e organização por pastas.
+
+No Jellyfin, crie uma biblioteca do tipo **Vídeos pessoais** chamada **YouTube**
+com a pasta `/media/youtube`. Para verificar a integração:
+
+```bash
+kubectl rollout status deployment/pinchflat -n homelab --timeout=180s
+kubectl exec -n homelab deploy/pinchflat -- test -w /downloads
+kubectl exec -n homelab deploy/jellyfin -- test -d /media/youtube
+curl -fsS https://youtube.feanor.com.br/healthcheck
+```
 
 ## 8. Monitoramento (opcional)
 
