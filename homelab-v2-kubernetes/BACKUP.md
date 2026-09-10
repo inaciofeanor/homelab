@@ -68,8 +68,9 @@ backup frio para PVCs e metadados.
 
 ## Restaurar em outro computador
 
-1. Instale Linux e monte o disco de dados no mesmo caminho usado nos manifests
-   (`/mnt/dados-homelab-novo`), ou ajuste todos os `hostPath` antes de continuar.
+1. Instale Linux e monte os discos de dados nos mesmos caminhos usados nos manifests
+   (`/mnt/dados-homelab-novo` e `/mnt/dados-jellyfin`), ou ajuste todos os
+   `hostPath` antes de continuar.
 2. Instale um k3s novo. Não copie `/var/lib/rancher/k3s/server` da máquina antiga.
 3. Extraia `repository/homelab.tar.gz` do backup ou clone este repositório.
 4. Revise IPs, DNS, certificados, secrets e caminhos nos manifests.

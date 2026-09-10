@@ -5,7 +5,7 @@ O Argo CD é instalado pelo chart Helm `argo/argo-cd`, fixado na versão `10.4.0
 `Application` para cada serviço e acompanha a branch `dev`.
 
 A `Application` `homelab-apps` controla somente o `AppProject` e o
-`ApplicationSet`. Na tela inicial, Nextcloud, Immich, Home Assistant e os
+`ApplicationSet`. Na tela inicial, Nextcloud, Immich, Home Assistant, Pinchflat e os
 demais serviços aparecem separadamente. Recursos compartilhados também aparecem
 como aplicações independentes: `homelab-platform`, `homelab-secrets`,
 `homelab-ingresses` e `homelab-maintenance`.
