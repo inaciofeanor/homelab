@@ -18,7 +18,6 @@ O plugin `nd-lyrics` e suas configurações ficam no PVC `navidrome-data` e entr
 no backup normal de PVCs. As letras geradas ficam ao lado das músicas no
 `hostPath`; elas só entram no backup geral quando `--include-hostpaths` é usado
 ou quando a biblioteca musical é copiada por outro processo.
-O PVC `home-assistant-data` contém `configuration.yaml`, `.storage`, o banco SQLite padrão e eventuais backups locais. O backup frio inclui todo o `/config` com o banco consistente, pois interrompe o k3s durante a cópia.
 O PVC `pinchflat-config` contém a configuração, as fontes e o banco SQLite do
 Pinchflat e entra no backup normal. Os vídeos baixados ficam em
 `/mnt/dados-jellyfin/media/youtube`; por estarem dentro da biblioteca de mídia,
@@ -106,8 +105,6 @@ use em uma máquina que contenha dados não copiados.
 kubectl get pods -A
 kubectl get pvc -A
 kubectl logs -n homelab deploy/nextcloud --tail=100
-kubectl logs -n homelab deploy/home-assistant --tail=100
-curl -fsS -o /dev/null https://casa.feanor.com.br/
 kubectl logs -n homelab deploy/gitea --tail=100
 ```
 
