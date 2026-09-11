@@ -5,7 +5,7 @@ O Argo CD é instalado pelo chart Helm `argo/argo-cd`, fixado na versão `10.4.0
 `Application` para cada serviço e acompanha a branch `dev`.
 
 A `Application` `homelab-apps` controla somente o `AppProject` e o
-`ApplicationSet`. Na tela inicial, Nextcloud, Immich, Home Assistant e os
+`ApplicationSet`. Na tela inicial, Nextcloud, Immich, Home Assistant, Pinchflat e os
 demais serviços aparecem separadamente. Recursos compartilhados também aparecem
 como aplicações independentes: `homelab-platform`, `homelab-secrets`,
 `homelab-ingresses` e `homelab-maintenance`.
@@ -62,11 +62,13 @@ próprias GitHub Actions. O Renovate altera somente o Git; o Argo CD continua
 sendo o único responsável por aplicar os manifests no cluster.
 
 Cada PR de imagem identifica no título o repositório da imagem e a versão
-anterior e nova. A tabela do corpo também mostra o arquivo alterado, o tipo da
-atualização e os digests. Quando o registry publica uma nova construção para a
-mesma tag, o título informa que se trata de uma troca de digest e mantém a tag
-visível. Assim, uma atualização de conteúdo imutável não é confundida com uma
-mudança de versão.
+anterior e nova. A tabela do corpo mostra separadamente a tag ou versão atual, a
+nova tag ou versão, o digest atual, o novo digest, o arquivo e o tipo da
+atualização. Quando a referência não declara uma tag, as colunas de versão
+mostram `latest (implícita)`, que é o valor efetivamente usado pelo runtime.
+Quando o registry publica uma nova construção para a mesma tag, o título informa
+que se trata de uma troca de digest e mantém a tag visível. Assim, uma
+atualização de conteúdo imutável não é confundida com uma mudança de versão.
 
 Acompanhe as versões detectadas na issue **Atualizações disponíveis**. Antes de
 integrar um PR:
@@ -76,6 +78,11 @@ integrar um PR:
 3. confirme tag e digest da imagem e valide os manifests;
 4. integre em `dev` e acompanhe o rollout e a saúde no Argo CD;
 5. promova para `main` somente após testar a aplicação.
+
+
+O MariaDB do Nextcloud fica restrito à série `11.8.x`, suportada pelo
+Nextcloud 34. O Renovate pode propor patches dessa série, mas não deve abrir
+atualizações para MariaDB 12 enquanto ele estiver fora da matriz suportada.
 
 Não integre em lote o PR inicial de pinagem sem revisar cada imagem. Atualizações
 major exigem aprovação no Dependency Dashboard e nenhum PR usa automerge.

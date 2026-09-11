@@ -32,6 +32,8 @@ spec:
   selector:
     matchLabels:
       app: nextcloud-db
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -42,7 +44,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: mariadb
-          image: mariadb:11@sha256:2439dcd7d14010ecd1ff7a4e1c5abe8e208c34fe35290744deeeaac3569043c3
+          image: mariadb:11.8.9@sha256:2439dcd7d14010ecd1ff7a4e1c5abe8e208c34fe35290744deeeaac3569043c3
           imagePullPolicy: IfNotPresent
           args:
             - "--transaction-isolation=READ-COMMITTED"
@@ -110,7 +112,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: redis
-          image: redis:8.10.0-alpine@sha256:a6a88248ad5b0c724b7f2b380b7d21f46097db158b2b077ef85bcb97f90aee3a
+          image: redis:8.10.1-alpine@sha256:9c3ecc609a8087c0f11c494fefaf37a8f7bf9a967631d4a0da8967a9810be354
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6379
@@ -159,7 +161,7 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: configure-trusted-domain
-          image: nextcloud:34.0.3@sha256:6c4a4dc40b96cc3e9702cd87f1d17d01eba42047dedf9b34aa13f51c5985b5d4
+          image: nextcloud:34.0.3@sha256:6db41df8956dc1d48616484837f73b2a202d57e67e240b1abbed465bc79ac915
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
@@ -173,7 +175,7 @@ spec:
               mountPath: /var/www/html
       containers:
         - name: nextcloud
-          image: nextcloud:34.0.3@sha256:6c4a4dc40b96cc3e9702cd87f1d17d01eba42047dedf9b34aa13f51c5985b5d4
+          image: nextcloud:34.0.3@sha256:6db41df8956dc1d48616484837f73b2a202d57e67e240b1abbed465bc79ac915
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:

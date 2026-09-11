@@ -6,6 +6,7 @@
   ],
   "baseBranchPatterns": ["dev"],
   "ignorePaths": ["homelab-v1-docker-compose/**"],
+  "ignoreDeps": ["ghcr.io/immich-app/postgres", "postgres"],
   "kubernetes": {
     "managerFilePatterns": ["/^homelab-v2-kubernetes/.+\\.ya?ml$/"]
   },
@@ -35,7 +36,7 @@
       "addLabels": ["container-image"],
       "commitMessageAction": "Atualizar",
       "commitMessageTopic": "imagem {{depName}}",
-      "commitMessageExtra": "de {{{currentVersion}}} para {{{newVersion}}}",
+      "commitMessageExtra": "de {{{currentValue}}} para {{{newValue}}}",
       "prBodyColumns": [
         "Imagem",
         "Arquivo",
@@ -49,8 +50,8 @@
         "Imagem": "{{{depNameLinked}}}",
         "Arquivo": "`{{{packageFile}}}`",
         "Tipo": "`{{{updateType}}}`",
-        "Versão atual": "`{{{currentVersion}}}`",
-        "Nova versão": "`{{{newVersion}}}`",
+        "Versão atual": "{{#if currentValue}}`{{{currentValue}}}`{{else}}{{#if currentVersion}}`{{{currentVersion}}}`{{else}}`latest (implícita)`{{/if}}{{/if}}",
+        "Nova versão": "{{#if newValue}}`{{{newValue}}}`{{else}}{{#if newVersion}}`{{{newVersion}}}`{{else}}`latest (implícita)`{{/if}}{{/if}}",
         "Digest atual": "{{#if currentDigest}}`{{{currentDigestShort}}}`{{else}}—{{/if}}",
         "Novo digest": "{{#if newDigest}}`{{{newDigestShort}}}`{{else}}—{{/if}}"
       }
@@ -60,19 +61,50 @@
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["digest"],
       "minimumReleaseAgeBehaviour": "timestamp-optional",
-      "commitMessageExtra": "digest da tag {{{currentVersion}}} de {{{currentDigestShort}}} para {{{newDigestShort}}}"
+      "commitMessageExtra": "digest da tag {{#if currentValue}}{{{currentValue}}}{{else}}latest (implícita){{/if}} de {{{currentDigestShort}}} para {{{newDigestShort}}}"
     },
     {
       "description": "Identificar a fixação inicial de digest",
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["pinDigest"],
       "minimumReleaseAgeBehaviour": "timestamp-optional",
-      "commitMessageExtra": "tag {{{currentVersion}}} no digest {{{newDigestShort}}}"
+      "commitMessageExtra": "tag {{#if currentValue}}{{{currentValue}}}{{else}}latest (implícita){{/if}} no digest {{{newDigestShort}}}"
     },
     {
       "description": "Agrupar apenas atualizações das actions do próprio workflow",
       "matchManagers": ["github-actions"],
       "groupName": "GitHub Actions"
+    },
+    {
+      "description": "Manter o MariaDB do Nextcloud na serie 11.8 suportada",
+      "matchManagers": ["kubernetes"],
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["mariadb"],
+      "matchCurrentValue": "/^11\\.8\\./",
+      "allowedVersions": "/^11\\.8\\./"
+    },
+    {
+      "description": "Bloquear upgrades major do MariaDB do Nextcloud",
+      "matchManagers": ["kubernetes"],
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["mariadb"],
+      "matchCurrentValue": "/^11\\.8\\./",
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Bloquear upgrades major no manifesto do Immich",
+      "matchManagers": ["kubernetes"],
+      "matchFileNames": ["**/400-immich.yaml"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Bloquear upgrades major nos manifestos do Vikunja e n8n",
+      "matchManagers": ["kubernetes"],
+      "matchFileNames": ["**/430-vikunja.yaml", "**/440-n8n.yaml"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {

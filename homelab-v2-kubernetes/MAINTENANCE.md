@@ -69,6 +69,19 @@ kubectl rollout status deployment/DEPLOYMENT -n NAMESPACE --timeout=300s
 
 Antes de atualizar bancos ou aplicações que armazenam dados, execute um backup. Actual Budget 26.8.0 e Memos usam SQLite e estratégia `Recreate`; não altere para `RollingUpdate`, pois dois pods não devem acessar o mesmo arquivo simultaneamente. Consulte as notas da versão do Actual Budget antes de atualizar e mantenha a imagem fixada por tag e digest.
 
+### Upgrades major do PostgreSQL
+
+As imagens PostgreSQL persistentes do Immich, Vikunja e n8n ficam em
+`ignoreDeps` no Renovate. Atualizações dessas imagens devem ser propostas
+manualmente, depois de revisar a compatibilidade e preparar a migração. A troca
+da tag não migra o diretório de dados: faça dump lógico, restaure em um PVC vazio
+com a nova major e valide a aplicação antes de descartar o PVC anterior. Os
+deployments dos bancos usam `Recreate` para impedir acesso simultâneo ao PVC.
+
+No PostgreSQL 18, revise também o novo layout de `PGDATA`: o volume passa a ser
+montado em `/var/lib/postgresql`, com os dados em um subdiretório específico da
+major. Nunca aponte diretamente a imagem 18 para o PVC 17 atual.
+
 ### Atualizar o RomM
 
 O RomM está fixado na versão 5.2.0 e executa as migrações do MariaDB ao
@@ -99,6 +112,21 @@ kubectl top pod -n homelab -l app=home-assistant
 ```
 
 A imagem é fixada por versão e digest em `460-home-assistant.yaml`. Faça backup do PVC antes de atualizar. O `ConfigMap` só inicia a configuração; alterações posteriores em `/config/configuration.yaml` permanecem no PVC. Esta instalação não possui Supervisor: mantenha dependências como MQTT em serviços separados.
+
+### Manutenção do Pinchflat
+
+```bash
+kubectl get deployment/pinchflat service/pinchflat ingress/pinchflat pvc/pinchflat-config -n homelab
+kubectl logs -n homelab deployment/pinchflat --tail=200
+kubectl exec -n homelab deploy/pinchflat -- test -w /downloads
+kubectl exec -n homelab deploy/jellyfin -- test -d /media/youtube
+curl -fsS https://youtube.feanor.com.br/healthcheck
+```
+
+O Pinchflat deve ser o único processo com escrita na pasta de downloads; o
+Jellyfin a consome pelo mount somente leitura de `/media`. Antes de atualizar,
+faça backup do PVC `pinchflat-config`. Inclua os `hostPath` para preservar
+também os vídeos baixados.
 
 ## Atualizações automáticas de imagens
 

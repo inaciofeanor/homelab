@@ -9,6 +9,7 @@ resources:
   - 130-romm-steamgriddb-sealed-secret.yaml
   - 140-vikunja-sealed-secret.yaml
   - 150-n8n-sealed-secret.yaml
+  - 155-pinchflat-sealed-secret.yaml
 
   # Certificados
   - 200-certificates.yaml
@@ -32,6 +33,7 @@ resources:
   - 440-n8n.yaml
   - 450-actual-budget.yaml
   - 460-home-assistant.yaml
+  - 465-pinchflat.yaml
 
   # GitOps
   - 901-argocd-applications.yaml

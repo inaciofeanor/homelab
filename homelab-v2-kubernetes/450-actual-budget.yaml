@@ -33,7 +33,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: actual-budget
-          image: actualbudget/actual-server:26.8.0@sha256:ef66469837852d04dd67e70cb069dca71a95e6ab135a905f6568730bf3f71480
+          image: actualbudget/actual-server:26.9.0@sha256:59cab86c77e764855119e2d5ddd96b9c9cefd90913f4feed7f4ee1433a6482c5
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

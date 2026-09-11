@@ -21,6 +21,8 @@ kind: Deployment
 metadata: {name: n8n-db, namespace: homelab}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels: {app: n8n-db}
   template:
@@ -85,7 +87,7 @@ spec:
           command: ["/bin/sh", "-ec", "until pg_isready -h n8n-db -U n8n -d n8n; do sleep 2; done"]
       containers:
         - name: n8n
-          image: docker.io/n8nio/n8n:2.35.3@sha256:31375a4f730081a139bba2d379bf2efaa8e662cc9e131d12bb5e15859d4f0282
+          image: docker.io/n8nio/n8n:2.39.0@sha256:c7d3301deee1c5a7571a124d14ba9b3f973fd55d515ee87b81cd62f7b4e75b40
           imagePullPolicy: IfNotPresent
           env:
             - {name: DB_TYPE, value: postgresdb}
