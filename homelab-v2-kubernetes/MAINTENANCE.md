@@ -86,11 +86,15 @@ major. Nunca aponte diretamente a imagem 18 para o PVC 17 atual.
 
 O RomM está fixado na versão 5.2.0 e executa as migrações do MariaDB ao
 iniciar. Antes de trocar a imagem, execute o backup descrito em [BACKUP.md](BACKUP.md).
+O MariaDB está fixado em `12.3.3` por tag e digest. O deployment `romm-db`
+deve manter a estratégia `Recreate`, impedindo que duas instâncias acessem
+simultaneamente o PVC `romm-db-data` durante atualizações.
 Depois que o Argo CD sincronizar a alteração, valide o rollout, a versão e os
 logs de migração:
 
 ```bash
 kubectl rollout status deployment/romm -n homelab --timeout=600s
+kubectl rollout status deployment/romm-db -n homelab --timeout=600s
 kubectl get deployment/romm -n homelab \
   -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
 kubectl logs -n homelab deployment/romm --since=15m
