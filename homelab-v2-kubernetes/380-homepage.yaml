@@ -101,6 +101,7 @@ data:
         disk:
           - /host-root
           - /mnt/dados-homelab-novo
+          - /mnt/dados-jellyfin
     - kubernetes:
         cluster:
           show: true
@@ -228,6 +229,9 @@ spec:
             - mountPath: /mnt/dados-homelab-novo
               name: dados-homelab-novo
               readOnly: true
+            - mountPath: /mnt/dados-jellyfin
+              name: dados-jellyfin
+              readOnly: true
       volumes:
         - name: homepage-config
           configMap:
@@ -239,6 +243,10 @@ spec:
         - name: dados-homelab-novo
           hostPath:
             path: /mnt/dados-homelab-novo
+            type: Directory
+        - name: dados-jellyfin
+          hostPath:
+            path: /mnt/dados-jellyfin
             type: Directory
         - name: homepage-assets
           persistentVolumeClaim:
