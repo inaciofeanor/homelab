@@ -32,7 +32,6 @@ resources:
   - 430-vikunja.yaml
   - 440-n8n.yaml
   - 450-actual-budget.yaml
-  - 460-home-assistant.yaml
   - 465-pinchflat.yaml
 
   # GitOps

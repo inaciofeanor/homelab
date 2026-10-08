@@ -9,7 +9,6 @@ Stack de nó único baseada em k3s e Traefik. Os manifests em `homelab-v2-kubern
 - [GitOps com Argo CD](GITOPS.md): bootstrap, sincronização automática, PRs de atualização do Renovate e recuperação.
 - [Backup e restauração](BACKUP.md): cópia fria dos PVCs, bibliotecas em `hostPath` e recuperação em outra máquina.
 
-O Home Assistant é executado como Container, com dados persistentes em PVC e acesso em `https://casa.feanor.com.br`.
 O Pinchflat gerencia downloads do YouTube em `https://youtube.feanor.com.br`;
 os arquivos são publicados na biblioteca `YouTube` do Jellyfin.
 

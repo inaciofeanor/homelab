@@ -86,11 +86,15 @@ major. Nunca aponte diretamente a imagem 18 para o PVC 17 atual.
 
 O RomM está fixado na versão 5.2.0 e executa as migrações do MariaDB ao
 iniciar. Antes de trocar a imagem, execute o backup descrito em [BACKUP.md](BACKUP.md).
+O MariaDB está fixado em `12.3.3` por tag e digest. O deployment `romm-db`
+deve manter a estratégia `Recreate`, impedindo que duas instâncias acessem
+simultaneamente o PVC `romm-db-data` durante atualizações.
 Depois que o Argo CD sincronizar a alteração, valide o rollout, a versão e os
 logs de migração:
 
 ```bash
 kubectl rollout status deployment/romm -n homelab --timeout=600s
+kubectl rollout status deployment/romm-db -n homelab --timeout=600s
 kubectl get deployment/romm -n homelab \
   -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
 kubectl logs -n homelab deployment/romm --since=15m
@@ -101,17 +105,6 @@ Se a aplicação não ficar pronta, preserve o banco e os PVCs, consulte os logs
 e reverta o commit no Git. Se a migração tiver alterado o banco de forma
 incompatível, restaure em conjunto o dump do MariaDB e os volumes auxiliares do
 backup criado antes da atualização; não restaure apenas um deles.
-
-### Manutenção do Home Assistant
-
-```bash
-kubectl get deployment/home-assistant service/home-assistant ingress/home-assistant pvc/home-assistant-data -n homelab
-kubectl logs -n homelab deployment/home-assistant --tail=200
-kubectl exec -n homelab deploy/home-assistant -- python -m homeassistant --script check_config --config /config
-kubectl top pod -n homelab -l app=home-assistant
-```
-
-A imagem é fixada por versão e digest em `460-home-assistant.yaml`. Faça backup do PVC antes de atualizar. O `ConfigMap` só inicia a configuração; alterações posteriores em `/config/configuration.yaml` permanecem no PVC. Esta instalação não possui Supervisor: mantenha dependências como MQTT em serviços separados.
 
 ### Manutenção do Pinchflat
 

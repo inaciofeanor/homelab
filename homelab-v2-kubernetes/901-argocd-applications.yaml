@@ -96,8 +96,6 @@ spec:
             include: "{150-n8n-sealed-secret.yaml,440-n8n.yaml}"
           - name: actual-budget
             include: 450-actual-budget.yaml
-          - name: home-assistant
-            include: 460-home-assistant.yaml
           - name: pinchflat
             include: "{155-pinchflat-sealed-secret.yaml,465-pinchflat.yaml}"
   template:

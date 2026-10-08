@@ -59,6 +59,8 @@ metadata:
   namespace: homelab
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: romm-db
@@ -69,9 +71,11 @@ spec:
     spec:
       containers:
         - name: mariadb
-          image: mariadb@sha256:dd9b303aed4f4890ed09f766d8ca9ddfd176c0c6f6267feff53b3192ec65a979
+          image: mariadb:13.0.2@sha256:f1bba652ba57bea3099ca2fe1af692af537c27d96e0bcde39dce29e2ba1ec4f3
           imagePullPolicy: IfNotPresent
           env:
+            - name: MARIADB_AUTO_UPGRADE
+              value: "1"
             - name: MARIADB_DATABASE
               value: romm
             - name: MARIADB_USER
@@ -135,7 +139,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: romm
-          image: rommapp/romm:5.2.0@sha256:3512f2ca455782f90247271bed23116e6bc675bc74e379be2c41696e607ab11e
+          image: rommapp/romm:5.3.1@sha256:0d66b4ea152a237c7f24b95e87459f46d3c596a7c0b35a82f26bc971487278b3
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
