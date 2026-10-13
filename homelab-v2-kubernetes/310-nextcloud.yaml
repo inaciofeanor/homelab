@@ -197,8 +197,8 @@ spec:
             - containerPort: 80
           resources:
             requests:
-              cpu: 200m        # era 500m
-              memory: 512Mi
+              cpu: 100m
+              memory: 256Mi
             limits:
               cpu: 750m         # novo
               memory: 1Gi

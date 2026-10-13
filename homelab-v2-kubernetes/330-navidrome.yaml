@@ -51,8 +51,8 @@ spec:
             - containerPort: 4533
           resources:
             requests:
-              cpu: 100m        # era 200m
-              memory: 256Mi
+              cpu: 50m
+              memory: 128Mi
             limits:
               cpu: 500m         # novo
               memory: 512Mi

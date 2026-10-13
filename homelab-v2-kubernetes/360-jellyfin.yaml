@@ -43,7 +43,7 @@ spec:
             - containerPort: 8096
           resources:
             requests:
-              cpu: 200m
+              cpu: 500m
               memory: 1Gi
             limits:
               cpu: "2"          # mantém — precisa pra transcode

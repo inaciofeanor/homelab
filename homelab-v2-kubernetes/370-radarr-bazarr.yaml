@@ -51,8 +51,8 @@ spec:
           ports:
             - containerPort: 7878
           resources:
-            requests: {cpu: 100m, memory: 384Mi}
-            limits: {cpu: 750m, memory: 1Gi}
+            requests: {cpu: 50m, memory: 256Mi}
+            limits: {cpu: 750m, memory: 768Mi}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
@@ -90,8 +90,8 @@ spec:
           ports:
             - containerPort: 6767
           resources:
-            requests: {cpu: 100m, memory: 256Mi}
-            limits: {cpu: "1", memory: 1Gi}
+            requests: {cpu: 50m, memory: 256Mi}
+            limits: {cpu: "1", memory: 768Mi}
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:

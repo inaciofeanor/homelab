@@ -23,6 +23,36 @@ df -h
 sudo du -sh /var/lib/rancher/k3s/storage
 ```
 
+## Baseline de recursos (13/10/2026)
+
+O nó único `palantir` oferece 4 vCPUs e cerca de 15 GiB de memória alocável.
+Os valores abaixo são média e máximo dos últimos sete dias no Prometheus:
+memória `container_memory_working_set_bytes` e CPU média móvel de cinco minutos
+de `container_cpu_usage_seconds_total`. Picos mais antigos ou cargas ainda não
+executadas não estão representados.
+
+| Contêiner | CPU média / pico | RAM média / pico | Ação |
+| --- | ---: | ---: | --- |
+| RomM | 173 / 500m | 806 / 1.024 MiB | Limites de 1 CPU e 2 GiB; `request` de 200m / 1 GiB. OOMKilled no limite anterior de 1 GiB. |
+| Jellyfin | 711 / 1.899m | 441 / 1.003 MiB | `request` de CPU de 500m; limite de 2 CPUs preservado para transcodificação. |
+| Immich Server | 8 / 511m | 828 / 1.170 MiB | `requests` de 300m / 1 GiB; limites de memória preservados. |
+| Immich ML | 1 / 2m | 189 / 238 MiB | `requests` de 100m / 512 MiB; limite de 3 GiB preservado para inferência eventual. |
+| n8n | 16 / 135m | 336 / 726 MiB | Limite de memória elevado de 768 MiB para 1 GiB. |
+| Prometheus | 96 / 211m | 703 / 996 MiB | Limite elevado de 1 para 1,5 GiB. |
+| Grafana | 12 / 31m | 210 / 235 MiB | `request` de 256 MiB e limite de 512 MiB. |
+| Kavita | 8 / 370m | 267 / 474 MiB | `request` de 512 MiB e limite de 1 GiB. |
+
+Os demais serviços também foram conferidos. Ajustes modestos de `requests` em
+Nextcloud, Gitea, Navidrome, Radarr e Bazarr liberam espaço no agendador sem
+reduzir seus limites de CPU. Os limites de memória de Radarr e Bazarr foram
+reduzidos para 768 MiB, ainda acima dos máximos observados (301 e 296 MiB).
+Não some `limits` como se fossem reserva: o agendador usa `requests`, enquanto
+os limites permitem picos não simultâneos. Reavalie após importações, scans e
+transcodificações, especialmente Immich ML e Jellyfin.
+
+Depois de alterar valores, confira `kubectl describe node palantir`,
+`kubectl top pods -A --containers` e reinicializações por `OOMKilled`.
+
 ## Diagnóstico
 
 ```bash
