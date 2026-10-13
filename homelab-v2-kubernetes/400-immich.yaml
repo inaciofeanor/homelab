@@ -167,8 +167,8 @@ spec:
             - containerPort: 3003
           resources:
             requests:
-              cpu: 500m
-              memory: 1Gi
+              cpu: 100m
+              memory: 512Mi
             limits:
               memory: 3Gi
           volumeMounts:
@@ -251,8 +251,8 @@ spec:
             - containerPort: 2283
           resources:
             requests:
-              cpu: 500m
-              memory: 1.5Gi
+              cpu: 300m
+              memory: 1Gi
             limits:
               memory: 2Gi
           volumeMounts:
