@@ -26,7 +26,7 @@ prometheus:
         cpu: 200m
         memory: 768Mi
       limits:
-        memory: 1Gi
+        memory: 1536Mi
     storageSpec:
       volumeClaimTemplate:
         spec:
@@ -105,9 +105,9 @@ grafana:
   resources:
     requests:
       cpu: 100m
-      memory: 128Mi
-    limits:
       memory: 256Mi
+    limits:
+      memory: 512Mi
   persistence:
     enabled: true
     storageClassName: local-path

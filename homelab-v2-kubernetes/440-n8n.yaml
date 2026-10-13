@@ -115,7 +115,7 @@ spec:
             - {name: http, containerPort: 5678}
           resources:
             requests: {cpu: 100m, memory: 512Mi}
-            limits: {cpu: 750m, memory: 768Mi}
+            limits: {cpu: 750m, memory: 1Gi}
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
