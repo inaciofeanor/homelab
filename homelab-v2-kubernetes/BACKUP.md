@@ -141,18 +141,26 @@ O WSL precisa estar ativo no horário; o cron comum não recupera execuções pe
 O script `tools/backup-postgres-to-google-drive.sh` cria dumps lógicos no
 formato customizado do PostgreSQL, valida o catálogo, grava checksum SHA-256 e
 mantém 14 dias. O dump do Immich cobre o banco; as fotografias continuam no
-`hostPath` e precisam de uma estratégia de backup própria. O dump do n8n deve
-ser preservado junto da chave `N8N_ENCRYPTION_KEY`, armazenada no Sealed Secret.
+`hostPath` e precisam de uma estratégia de backup própria. Para o n8n, o mesmo
+script também arquiva o PVC `n8n-data` (`/home/node/.n8n`) em
+`Google Drive/Backups/n8n/n8n-data-<data>.tar.gz`, com checksum separado e
+retenção de 14 dias. O dump e o arquivo do PVC devem ser restaurados juntos.
+A chave `N8N_ENCRYPTION_KEY` permanece no Sealed Secret e deve ser preservada:
+sem ela, as credenciais do banco restaurado não podem ser decifradas. O arquivo
+do PVC também pode conter dados sensíveis; restrinja o acesso ao Google Drive.
 
-Os dumps são transferidos em partes de 32 MiB para evitar timeouts da conexão com
-a API do Kubernetes:
+Os dumps e o arquivo do PVC são transferidos em partes de 32 MiB para evitar
+timeouts da conexão com a API do Kubernetes:
 
 ```bash
 ./tools/backup-postgres-to-google-drive.sh immich
 ./tools/backup-postgres-to-google-drive.sh n8n
 ```
 
-Agendamento sugerido, depois do Vikunja:
+Agendamento no cron do WSL, depois do Vikunja. Confirme que o script é executável
+(`chmod +x tools/backup-postgres-to-google-drive.sh`) e monitore
+`cron-n8n.log`, pois o cron não recupera execuções perdidas quando o WSL está
+desligado:
 
 ```cron
 0 16 * * * /home/SEU_USUARIO/git/homelab/tools/backup-postgres-to-google-drive.sh immich >> "/mnt/d/Google Drive/Backups/cron-immich.log" 2>&1
