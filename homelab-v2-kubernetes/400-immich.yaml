@@ -118,7 +118,7 @@ spec:
     spec:
       containers:
         - name: valkey
-          image: docker.io/valkey/valkey:9@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
+          image: docker.io/valkey/valkey:9@sha256:3add1a336a920ea54770a001ab6feb3da5fceea96a40373a3a2cd469b815f0b7
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -214,7 +214,7 @@ spec:
     spec:
       initContainers:
         - name: ensure-storage-markers
-          image: busybox:1.38@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e
+          image: busybox:1.38@sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
