@@ -38,7 +38,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: memos
-          image: neosmemo/memos:0.31.0@sha256:8596928c21551afc7d4e100051510bc134fd0caae51ad1d26cf899845d719321
+          image: neosmemo/memos:26.11.0@sha256:7e8ca9de6504be7ea724793c1b7f1d1540cc1513aad1877aa3e141061013345a
           imagePullPolicy: IfNotPresent
           env:
             - name: MEMOS_PORT
