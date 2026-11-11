@@ -4,7 +4,7 @@
     "config:recommended",
     "docker:pinDigests"
   ],
-  "baseBranchPatterns": ["dev"],
+  "baseBranchPatterns": ["main"],
   "ignorePaths": ["homelab-v1-docker-compose/**"],
   "ignoreDeps": ["ghcr.io/immich-app/postgres", "postgres"],
   "kubernetes": {

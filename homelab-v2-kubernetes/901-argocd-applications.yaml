@@ -30,7 +30,7 @@ spec:
   project: homelab
   source:
     repoURL: git@github.com:inaciofeanor/homelab.git
-    targetRevision: dev
+    targetRevision: main
     path: homelab-v2-kubernetes
     directory:
       include: 901-argocd-applications.yaml
@@ -108,7 +108,7 @@ spec:
       project: homelab
       source:
         repoURL: git@github.com:inaciofeanor/homelab.git
-        targetRevision: dev
+        targetRevision: main
         path: homelab-v2-kubernetes
         directory:
           include: "{{.include}}"

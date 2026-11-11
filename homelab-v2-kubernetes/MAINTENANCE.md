@@ -79,18 +79,20 @@ curl -fsS -o /dev/null https://diario.feanor.com.br/
 
 ## Alterar e atualizar a stack
 
-Nunca edite recursos apenas no cluster quando o Argo CD estiver com `selfHeal` ativo. Altere primeiro os manifests na branch `dev`:
+Nunca edite recursos apenas no cluster quando o Argo CD estiver com `selfHeal`
+ativo. Altere os manifests em uma branch de proposta:
 
 ```bash
-git switch dev
+git switch main
 git pull --ff-only
+git switch -c minha-alteracao
 kubectl apply --dry-run=client -k homelab-v2-kubernetes
 kubectl diff -k homelab-v2-kubernetes
-kubectl apply -k homelab-v2-kubernetes
-kubectl get pods -A -w
 ```
 
-Depois de validar, faça commit e promova a alteração para `main`. Imagens com tag `latest` só são baixadas novamente quando o pod é recriado; reinicie um serviço deliberadamente com:
+Depois de validar, faça commit e abra um PR para `main`. Após o merge,
+acompanhe o Argo CD e os pods. Imagens com tag `latest` só são baixadas
+novamente quando o pod é recriado; reinicie um serviço deliberadamente com:
 
 ```bash
 kubectl rollout restart deployment/DEPLOYMENT -n NAMESPACE
@@ -174,8 +176,7 @@ para a nova. O corpo apresenta imagem, manifesto, tipo da atualização, versõe
 e digests em colunas separadas. Se apenas o digest de uma tag for alterado, o
 título identifica explicitamente a tag e os digests anterior e novo, sem
 apresentar a reconstrução da imagem como uma nova versão.
-Depois do merge em `dev`, valide o serviço e promova a mudança para `main` pelo
-fluxo normal do repositório.
+Depois do merge em `main`, acompanhe o rollout no Argo CD e valide o serviço.
 
 Use nomes canônicos de registry nos manifests. A imagem do n8n deve usar
 `docker.io/n8nio/n8n`: o alias `docker.n8n.io` delega a autenticação ao Docker
@@ -349,7 +350,8 @@ Para repositório hospedado no Gitea do próprio cluster, prefira o endereço in
 http://gitea-http.homelab.svc.cluster.local:3000/USUARIO/REPOSITORIO.git
 ```
 
-Use `dev` para validação e `main` para produção. Com `prune` e `selfHeal`, remoções ou mudanças no Git são propagadas automaticamente ao cluster.
+Use uma branch de proposta para validação e `main` para produção. Com `prune` e
+`selfHeal`, remoções ou mudanças em `main` são propagadas automaticamente ao cluster.
 
 ## Radarr e Bazarr
 
