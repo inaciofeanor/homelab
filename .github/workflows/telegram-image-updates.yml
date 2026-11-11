@@ -53,6 +53,7 @@ jobs:
               --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
               --data-urlencode "text=${message}"
 
-            gh issue edit "$number" --repo "$GH_REPO" --add-label telegram-notified
+            gh api --method POST "repos/${GH_REPO}/issues/${number}/labels" \
+              -f labels[]=telegram-notified --silent
             echo "PR #$number notificado."
           done < <(jq -c '.[] | select([.labels[].name] | index("telegram-notified") | not)' <<< "$prs")
