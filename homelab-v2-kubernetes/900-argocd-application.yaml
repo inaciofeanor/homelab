@@ -30,7 +30,7 @@ spec:
   project: homelab
   source:
     repoURL: git@github.com:inaciofeanor/homelab.git
-    targetRevision: dev
+    targetRevision: main
     path: homelab-v2-kubernetes
   destination:
     server: https://kubernetes.default.svc

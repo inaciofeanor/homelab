@@ -14,7 +14,8 @@ os arquivos são publicados na biblioteca `YouTube` do Jellyfin.
 
 ## Aplicar alterações
 
-Trabalhe na branch `dev`, valide e aplique a stack a partir desta pasta:
+Trabalhe em uma branch de proposta e integre em `main` por PR. Valide a stack a
+partir desta pasta:
 
 ```bash
 kubectl apply --dry-run=client -k .
@@ -23,12 +24,12 @@ kubectl get pods -A
 ```
 
 As imagens e Actions são verificadas diariamente pelo Renovate. As propostas
-aparecem como pull requests contra `dev`, sem automerge; atualizações major
+aparecem como pull requests contra `main`, sem automerge; atualizações major
 precisam ser liberadas na issue **Atualizações disponíveis**. O Renovate não
 propõe versões Docker antes do período de três dias; digests sem timestamp do
 registry não ficam bloqueados indefinidamente. O Renovate não altera o
-cluster diretamente: depois do merge, o Argo CD aplica a mudança e o
-serviço deve ser validado antes da promoção para `main`. Consulte
+cluster diretamente: depois do merge em `main`, o Argo CD aplica a mudança;
+acompanhe o rollout e valide o serviço. Consulte
 [GitOps com Argo CD](GITOPS.md#atualizações-de-imagens-com-renovate).
 
 ## Numeração dos manifests

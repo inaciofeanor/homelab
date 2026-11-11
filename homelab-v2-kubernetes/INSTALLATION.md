@@ -407,21 +407,23 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 -d; echo
 ```
 
-Configure o recurso `Application` do Argo CD para a branch desejada. Para este repositório, use `dev` para testes e `main` somente para versões aprovadas. Com `selfHeal` ativo, mudanças feitas manualmente no cluster serão revertidas pelo Argo CD.
+As `Applications` do Argo CD acompanham a branch protegida `main`. Valide
+mudanças em uma branch de proposta antes do merge. Com `selfHeal` ativo,
+mudanças feitas manualmente no cluster serão revertidas pelo Argo CD.
 
 ### Renovate no GitHub Actions
 
 O Renovate não instala componentes no cluster. O agendamento do workflow
 `.github/workflows/renovate.yml` é carregado da branch padrão `main`, enquanto
-as atualizações usam `dev` como branch base. Execuções manuais podem usar
-`dev`. Em **Settings > Actions > General > Workflow permissions**, mantenha a
+as atualizações usam `main` como branch base. Execuções manuais podem usar
+`main`. Em **Settings > Actions > General > Workflow permissions**, mantenha a
 permissão padrão como leitura e habilite **Allow GitHub Actions to create and
 approve pull requests**. As permissões adicionais ficam limitadas ao job no
 próprio workflow.
 
 Execute **Actions > Renovate > Run workflow** uma vez após configurar ou
 restaurar o repositório. Confirme que a execução cria ou atualiza a issue
-**Atualizações disponíveis** e que os PRs usam `dev` como base. O agendamento
+**Atualizações disponíveis** e que os PRs usam `main` como base. O agendamento
 diário só funciona quando o workflow existe em `main`.
 
 O workflow mantém a action fixada por SHA e o Renovate CLI por versão. Após
@@ -456,7 +458,9 @@ kubectl logs -n homelab deploy/NOME_DO_SERVICO -f
 kubectl apply -k .
 ```
 
-Faça alterações e commits na branch `dev`. Promova para `main` somente após validar no cluster e revisar os manifests. O workflow de GitHub executa Gitleaks em push para `main` e em pull requests.
+Faça alterações em uma branch de proposta e integre em `main` por PR após
+revisar os manifests. O workflow de GitHub executa Gitleaks em push para
+`main` e em pull requests.
 O Renovate verifica imagens e Actions diariamente, mas nunca integra ou implanta atualizações automaticamente.
 
 ### Alertas de atualizações de imagens no Telegram

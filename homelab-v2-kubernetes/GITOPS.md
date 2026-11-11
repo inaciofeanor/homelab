@@ -2,7 +2,7 @@
 
 O Argo CD é instalado pelo chart Helm `argo/argo-cd`, fixado na versão `10.4.0`
 (Argo CD `v3.5.1`). O manifesto `901-argocd-applications.yaml` cria uma
-`Application` para cada serviço e acompanha a branch `dev`.
+`Application` para cada serviço e acompanha a branch protegida `main`.
 
 A `Application` `homelab-apps` controla somente o `AppProject` e o
 `ApplicationSet`. Na tela inicial, Nextcloud, Immich, Pinchflat e os
@@ -39,11 +39,14 @@ kubectl apply -f homelab-v2-kubernetes/901-argocd-applications.yaml
 ## Fluxo de alterações
 
 1. Altere e valide os manifests localmente.
-2. Crie um commit e envie para `dev`.
-3. O Argo CD sincroniza automaticamente, remove recursos apagados do Git e
-   corrige alterações manuais no cluster.
-4. Promova para `main` somente depois da validação. Para usar `main`, altere
-   os dois campos `targetRevision` em `901-argocd-applications.yaml`.
+2. Crie uma branch de trabalho e abra um PR para `main`.
+3. Valide os manifests e os efeitos da alteração antes de integrar o PR.
+4. Após o merge, o Argo CD sincroniza automaticamente, remove recursos apagados
+   do Git e corrige alterações manuais no cluster.
+
+A proteção de `main` exige PR, mas não exige aprovação de outra pessoa, pois o
+repositório tem um único mantenedor. Não faça push direto nem force push em
+`main`. O bootstrap e o `ApplicationSet` usam `targetRevision: main`.
 
 Validações antes do push:
 
@@ -55,8 +58,8 @@ kubectl apply --dry-run=server -k homelab-v2-kubernetes
 ## Atualizações de imagens com Renovate
 
 O workflow agendado `.github/workflows/renovate.yml` é carregado da branch
-padrão `main`, consulta diariamente os registries e usa `dev` como branch base
-das atualizações. Execuções manuais também podem ser iniciadas em `dev`. Ele
+padrão `main`, consulta diariamente os registries e usa `main` como branch base
+das atualizações. Execuções manuais também podem ser iniciadas em `main`. Ele
 analisa os manifests Kubernetes deste diretório, arquivos Docker Compose e as
 próprias GitHub Actions. O Renovate altera somente o Git; o Argo CD continua
 sendo o único responsável por aplicar os manifests no cluster.
@@ -76,8 +79,7 @@ integrar um PR:
 1. leia as notas da versão e procure mudanças incompatíveis ou migrações;
 2. execute backup quando a aplicação ou o banco mantiver dados persistentes;
 3. confirme tag e digest da imagem e valide os manifests;
-4. integre em `dev` e acompanhe o rollout e a saúde no Argo CD;
-5. promova para `main` somente após testar a aplicação.
+4. integre o PR em `main` e acompanhe o rollout e a saúde no Argo CD.
 
 
 O MariaDB do Nextcloud fica restrito à série `11.8.x`, suportada pelo
