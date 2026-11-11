@@ -1,0 +1,58 @@
+name: Alertas de imagens no Telegram
+
+on:
+  schedule:
+    # 09:00 em America/Sao_Paulo (UTC-3), depois do Renovate das 07:17.
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+concurrency:
+  group: telegram-image-updates
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Avisar sobre PRs de imagens ainda não notificados
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$TELEGRAM_BOT_TOKEN" || -z "$TELEGRAM_CHAT_ID" ]]; then
+            echo "Configure TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID nos Secrets do repositório." >&2
+            exit 1
+          fi
+
+          gh label create telegram-notified --repo "$GH_REPO" --force \
+            --color "0e8a16" --description "Atualização de imagem avisada no Telegram"
+
+          prs=$(gh pr list --repo "$GH_REPO" --state open --label container-image \
+            --limit 100 --json number,title,url,labels)
+
+          while IFS= read -r pr; do
+            number=$(jq -r '.number' <<< "$pr")
+            title=$(jq -r '.title' <<< "$pr")
+            url=$(jq -r '.url' <<< "$pr")
+            message=$(printf 'Nova atualização de imagem no homelab\nPR #%s: %s\n%s' \
+              "$number" "$title" "$url")
+
+            curl --fail --silent --show-error --retry 3 --retry-delay 2 \
+              --connect-timeout 10 --max-time 30 --output /dev/null \
+              --request POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+              --data-urlencode "text=${message}"
+
+            gh issue edit "$number" --repo "$GH_REPO" --add-label telegram-notified
+            echo "PR #$number notificado."
+          done < <(jq -c '.[] | select([.labels[].name] | index("telegram-notified") | not)' <<< "$prs")

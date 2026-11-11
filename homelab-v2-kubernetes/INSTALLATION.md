@@ -458,3 +458,20 @@ kubectl apply -k .
 
 Faça alterações e commits na branch `dev`. Promova para `main` somente após validar no cluster e revisar os manifests. O workflow de GitHub executa Gitleaks em push para `main` e em pull requests.
 O Renovate verifica imagens e Actions diariamente, mas nunca integra ou implanta atualizações automaticamente.
+
+### Alertas de atualizações de imagens no Telegram
+
+O workflow `.github/workflows/telegram-image-updates.yml` consulta diariamente, às
+09:00 (America/Sao_Paulo), os PRs abertos com a label `container-image` que o
+Renovate atribui às atualizações de imagens. Depois de enviar cada mensagem, ele
+adiciona a label `telegram-notified` ao PR para evitar avisos repetidos. Na
+primeira execução, também avisa sobre PRs de imagem que já estiverem abertos.
+PRs abertos e fechados entre duas consultas diárias podem não gerar alerta.
+
+Para ativar, crie um bot pelo BotFather, inicie uma conversa com ele (ou adicione-o
+ao grupo desejado) e configure os *Actions secrets* `TELEGRAM_BOT_TOKEN` e
+`TELEGRAM_CHAT_ID` em **Settings → Secrets and variables → Actions** no GitHub.
+Não coloque o token em commits ou arquivos de configuração. O workflow também pode
+ser executado manualmente por **Actions → Alertas de imagens no Telegram → Run workflow**.
+Como workflows agendados rodam somente a partir da branch padrão, o arquivo precisa
+estar em `main` para que a consulta diária funcione.
