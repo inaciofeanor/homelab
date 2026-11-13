@@ -2,8 +2,8 @@ name: Alertas de imagens no Telegram
 
 on:
   schedule:
-    # 09:00 em America/Sao_Paulo (UTC-3), depois do Renovate das 07:17.
-    - cron: "0 12 * * *"
+    # 10:00 em America/Sao_Paulo (UTC-3), depois do Renovate das 09:00.
+    - cron: "0 13 * * *"
   workflow_dispatch:
 
 permissions:

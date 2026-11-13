@@ -2,8 +2,8 @@ name: Renovate
 
 on:
   schedule:
-    # 07:17 em America/Sao_Paulo (UTC-3).
-    - cron: "17 10 * * *"
+    # 09:00 em America/Sao_Paulo (UTC-3).
+    - cron: "0 12 * * *"
   workflow_dispatch:
 
 permissions:
