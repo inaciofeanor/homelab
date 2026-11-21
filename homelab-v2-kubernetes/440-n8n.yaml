@@ -87,7 +87,7 @@ spec:
           command: ["/bin/sh", "-ec", "until pg_isready -h n8n-db -U n8n -d n8n; do sleep 2; done"]
       containers:
         - name: n8n
-          image: docker.io/n8nio/n8n:2.39.4@sha256:5fa13ec66b5703f3ae0189eb979940baec35add43fa828e2313b1fe5190e7d25
+          image: docker.io/n8nio/n8n:2.48.0@sha256:416c29f75a0f9ac65b4339761a372af48f4a7e948de9df0d837b080d2b9d47a8
           imagePullPolicy: IfNotPresent
           env:
             - {name: DB_TYPE, value: postgresdb}
