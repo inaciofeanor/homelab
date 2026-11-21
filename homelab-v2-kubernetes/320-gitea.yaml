@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: gitea
-          image: gitea/gitea:28.3.0@sha256:411af83e9be78029c0047a5f5a72f1d91b7c793ba5e5813b4e70a6bb8e4a0738
+          image: gitea/gitea:28.4.0@sha256:1565a01ff935d56156285149acfce48ecc19c5d4e8ed278bebcf06f44e148295
           imagePullPolicy: IfNotPresent
           env:
             - name: USER_UID
